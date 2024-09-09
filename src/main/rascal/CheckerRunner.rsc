@@ -15,22 +15,24 @@ RascalCompilerConfig config(PathConfig original) = getRascalCoreCompilerConfig(o
 int main(str job="") {
     pcfgs = readTextValueString(#list[PathConfig], fromBase64(job));
     println("Received: <size(pcfgs)> jobs to check");
+    messages = [];
     int errors = 0;
     for (p <- pcfgs) {
         println("**** Building: <p.bin>");
         rascalFiles = [*find(s, "rsc") | s <- p.srcs];
         println("**** Found <size(rascalFiles)> rascal files");
         result = check(rascalFiles, config(p));
-        println(result);
         for (checked <- result) {
-            for (m <- checked.messages) {
-                switch (m) {
-                    case warning(str s, loc l): println("[WARN]: <l> <s>");
-                    case error(str s, loc l): {
-                        println("[ERR] <l> <s>");
-                        errors += 1;
-                    }
-                }
+            messages += sort([<checked.src.top, m> | m <- checked.messages]);
+        }
+    }
+    println("Done running, now printing messages");
+    for (<p, m> <- messages) {
+        switch (m) {
+            case warning(str s, loc l): println("[WARN]: <p>: <l> <s>");
+            case error(str s, loc l): {
+                println("[ERROR] <p>: <l> <s>");
+                errors += 1;
             }
         }
     }
