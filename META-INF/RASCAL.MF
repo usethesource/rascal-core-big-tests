@@ -1,0 +1,4 @@
+Manifest-Version: 0.0.1
+Project-Name: rascal-core-big-test
+Source: src/main/rascal
+Require-Libraries: |lib://rascal-core|, |lib://typepal|
