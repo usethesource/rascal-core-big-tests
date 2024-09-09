@@ -118,7 +118,7 @@ int main(
 
 
     // calculate topological order of dependency graph)
-    buildOrder = order({ *(proj.dependencies * {n}) | <n, proj> <- toBuild, proj.dependencies != {}});
+    buildOrder = order({ *(proj.dependencies * {n}) | <n, proj> <- projects, proj.dependencies != {}});
     println("*** Calculate dependency based build order: <buildOrder>");
     // filter out things that weren't requested (so we assume already build)
     buildOrder = [p | p <- buildOrder, p in toBuild.name] ;
