@@ -9,7 +9,7 @@ import util::FileSystem;
 import analysis::graphs::Graph;
 import util::ShellExec;
 
-data Project 
+data Project
     = project(
         loc repo, // git clone url
         set[str] dependencies, // other project this depends on (at a rascal level)
@@ -31,6 +31,7 @@ Projects projects = {
     <"flybytes", project(|https://github.com/usethesource/flybytes.git|, {"rascal"}, branch="chore/update-latest-rascal-release")>, // temporary use pr branch untill it's merged in main
     <"drambiguity", project(|https://github.com/cwi-swat/drambiguity.git|, {"rascal", "salix-core"})>,
     <"rascal-git", project(|https://github.com/cwi-swat/rascal-git.git|, {"rascal"})>,
+    <"php-analysis", project(|https://github.com/cwi-swat/php-analysis.git|, {"rascal", "rascal-git"})>,
     <"rascal-core", project(|https://github.com/usethesource/rascal-core.git|, {"rascal", "typepal"}, branch="master")>,
     <"rascal-lsp", project(|https://github.com/usethesource/rascal-language-servers.git|, {"rascal", "typepal", "rascal-core"}, subdir="rascal-lsp")>
 };
@@ -156,9 +157,9 @@ int main(
         memory,
         "-Drascal.monitor.batch", // disable fancy progress bar
         "-Drascal.compilerClasspath=<classPath>",
-        "-cp", classPath, 
-        "org.rascalmpl.shell.RascalShell", 
-        "CheckerRunner", 
+        "-cp", classPath,
+        "org.rascalmpl.shell.RascalShell",
+        "CheckerRunner",
         "--job",
         toBase64("<pcfgs>"),
         *["--printWarnings" | true := printWarnings]
