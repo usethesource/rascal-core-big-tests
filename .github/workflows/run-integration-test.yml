@@ -47,8 +47,10 @@ jobs:
           cache: 'maven'
 
       - name: Compile rascal java
-        run: mvn clean compile -Drascal.tutor.skip -DskipTest -Drascal.compile.skip
+        run: mvn -B clean compile package -Drascal.tutor.skip -DskipTest -Drascal.compile.skip
         working-directory: deps/rascal
+
+      - run: find deps/rascal/target -name '*-shaded.jar' -exec mv '{}' deps/rascal/rascal.jar \;
 
       - uses: actions/upload-artifact@v4
         name: 'Store dependencies for the other jobs'
@@ -81,7 +83,7 @@ jobs:
       - name: Typecheck rascal
         run: |
           java -jar target/dependencies/rascal.jar Main \
-            --rascalVersion "|cwd:///rascal/target/classes|" \
+            --rascalVersion "|cwd:///rascal/rascal.jar|" \
             --typepalVersion "|cwd:///typepal|" \
             --rascalCoreVersion "|cwd:///rascal-core|" \
             --repoFolder "|file:///$RUNNER_TEMP/repos|" \
