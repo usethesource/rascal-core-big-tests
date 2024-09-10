@@ -15,15 +15,17 @@ data Project
         set[str] dependencies, // other project this depends on (at a rascal level)
         bool rascalLib=false, // instead of rascal as a regular "project" dependency, us the tpls that came with the chosen rascal-version
         str branch="main", // branch to checkout from the remote
-        str subdir="" // if the rascal project is not at the root of the repo
+        str subdir="", // if the rascal project is not at the root of the repo
+        list[str] srcs = [], // override source calculation
+        set[str] ignores = {} // directories to ignore
     );
 
 alias Projects = rel[str name, Project config];
 
 Projects projects = {
-    <"rascal", project(|https://github.com/usethesource/rascal.git|, {})>,
-    <"typepal", project(|https://github.com/usethesource/typepal.git|, {"rascal"})>,
-    <"typepal-boot", project(|https://github.com/usethesource/typepal.git|, {}, rascalLib=true)>,
+    <"rascal", project(|https://github.com/usethesource/rascal.git|, {}, srcs = ["src/org/rascalmpl/library"], ignores={"experiments", "resource"})>,
+    <"typepal", project(|https://github.com/usethesource/typepal.git|, {"rascal"}, ignores={"examples"})>,
+    <"typepal-boot", project(|https://github.com/usethesource/typepal.git|, {}, rascalLib=true, ignores={"examples"})>,
     <"salix-core", project(|https://github.com/usethesource/salix-core.git|, {"rascal"})>,
     <"salix-contrib", project(|https://github.com/usethesource/salix-contrib.git|, {"rascal", "salix-core"})>,
     <"flybytes", project(|https://github.com/usethesource/flybytes.git|, {"rascal"}, branch="chore/update-latest-rascal-release")>, // temporary use pr branch untill it's merged in main
@@ -58,8 +60,11 @@ str buildCP(loc entries...) = intercalate(getSystemProperty("path.separator"), [
 loc tplPath(loc repoFolder, str name) = (repoFolder + name) + "target/classes";
 
 PathConfig generatePathConfig(str name, Project proj, loc repoFolder) {
+    loc projectRoot = (repoFolder + name) + proj.subdir;
+    srcs = proj.srcs != [] ? [projectRoot + s |  s <- proj.srcs ] : getProjectPathConfig(projectRoot).srcs;
     return pathConfig(
-        srcs = getProjectPathConfig(repoFolder + name + proj.subdir).srcs,
+        srcs = srcs,
+        ignores = [ s + i |  s<- srcs, i <- proj.ignores],
         bin = tplPath(repoFolder, name),
         libs = [ tplPath(repoFolder, dep) | dep <- proj.dependencies ] + (proj.rascalLib ? [|lib://rascal/|] : [])
     );
@@ -92,8 +97,9 @@ int updateRepos(Projects projs, loc repoFolder, bool full) {
 
 
 int main(
-    str memory = "-Xmx8G",
+    str memory = "-Xmx4G",
     bool update=false, // update all projects from remote
+    bool printWarnings = false, // print warnings in the final overview
     bool full=true, // do a full clone
     bool clean=true, // do a clean of the to build folders
     loc repoFolder = |cwd:///|,
@@ -102,6 +108,7 @@ int main(
     loc rascalCoreVersion=|home:///.m2/repository/org/rascalmpl/rascal-core/0.12.4/rascal-core-0.12.4.jar|,
     set[str] tests = {/*all*/}
     ) {
+    mkDirectory(repoFolder);
     int result = 0;
     toBuild = (tests == {}) ? projects : { p | p <- projects, p.name in tests};
 
@@ -128,12 +135,11 @@ int main(
 
     // prepare path configs
     println("*** Calculating class paths");
-    pcfgs = [generatePathConfig(n, proj, repoFolder) | n <- buildOrder, proj <- toBuild[n]];
-    println("*** Classpaths: <pcfgs>");
+    pcfgs = [<n, generatePathConfig(n, proj, repoFolder)> | n <- buildOrder, proj <- toBuild[n]];
 
 
     if (clean) {
-        for (p <- pcfgs) {
+        for (<_, p> <- pcfgs) {
             for (f <- find(p.bin, "tpl")) {
                 remove(f);
             }
@@ -154,7 +160,8 @@ int main(
         "org.rascalmpl.shell.RascalShell", 
         "CheckerRunner", 
         "--job",
-        toBase64("<pcfgs>")
+        toBase64("<pcfgs>"),
+        *["--printWarnings" | true := printWarnings]
     ]);
 
     try {

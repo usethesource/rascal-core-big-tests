@@ -46,25 +46,32 @@
   <build>
     <plugins>
       <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
+        <artifactId>maven-dependency-plugin</artifactId>
         <version>3.8.0</version>
-        <configuration>
-          <compilerArgument>-parameters</compilerArgument> 
-          <release>11</release>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.rascalmpl</groupId>
-        <artifactId>rascal-maven-plugin</artifactId>
-        <version>0.8.2</version>
-        <configuration>
-          <errorsAsWarnings>true</errorsAsWarnings>
-          <bin>${project.build.outputDirectory}</bin>
-          <srcs>
-            <src>${project.basedir}/src/main/rascal</src>
-          </srcs>
-        </configuration>
+        <executions>
+          <execution>
+            <?m2e ignore?>
+            <id>copy</id>
+            <phase>validate</phase>
+            <goals>
+              <goal>copy</goal>
+            </goals>
+            <configuration>
+              <outputAbsoluteArtifactFilename>true</outputAbsoluteArtifactFilename>
+              <overWriteSnapshots>true</overWriteSnapshots>
+              <artifactItems>
+                <artifactItem>
+                  <groupId>org.rascalmpl</groupId>
+                  <artifactId>rascal</artifactId>
+                  <type>jar</type>
+                  <overWrite>true</overWrite>
+                  <outputDirectory>${project.build.directory}/dependencies</outputDirectory>
+                  <destFileName>rascal.jar</destFileName>
+                </artifactItem>
+              </artifactItems>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>
