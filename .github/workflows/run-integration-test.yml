@@ -39,6 +39,17 @@ jobs:
           ref: ${{ inputs.rascal_core_version }}
           path: 'deps/rascal-core'
 
+
+      - uses: actions/setup-java@v4
+        with:
+          java-version: 17
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Compile rascal java
+        run: mvn clean compile -Drascal.tutor.skip -DskipTest -Drascal.compile.skip
+        working-directory: deps/rascal
+
       - uses: actions/upload-artifact@v4
         name: 'Store dependencies for the other jobs'
         with:
@@ -63,16 +74,16 @@ jobs:
           name: deps
 
       - name: Download needed rascal-jar
-        run: mvn validate
+        run: mvn -B validate
 
       - run: tree
 
       - name: Typecheck rascal
         run: |
           java -jar target/dependencies/rascal.jar Main \
-            --rascalVersion "|cwd:///deps/rascal|" \
-            --typepalVersion "|cwd:///deps/typepal|" \
-            --rascalCoreVersion "|cwd:///deps/rascal-core|" \
+            --rascalVersion "|cwd:///rascal/target/classes|" \
+            --typepalVersion "|cwd:///typepal|" \
+            --rascalCoreVersion "|cwd:///rascal-core|" \
             --repoFolder "|file:///$RUNNER_TEMP/repos|" \
             --full false \
             --clean \
