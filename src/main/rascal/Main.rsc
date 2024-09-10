@@ -23,7 +23,8 @@ data Project
 alias Projects = rel[str name, Project config];
 
 Projects projects = {
-    <"rascal", project(|https://github.com/usethesource/rascal.git|, {}, srcs = ["src/org/rascalmpl/library"], ignores={"experiments", "resource"})>,
+    <"rascal", project(|https://github.com/usethesource/rascal.git|, {}, srcs = ["src/org/rascalmpl/library"], ignores={"experiments", "resource", "lang/rascal/tests", "lang/rascal/grammar/tests", "lang/rascal/syntax/test"})>,
+    <"rascal-all", project(|https://github.com/usethesource/rascal.git|, {})>,
     <"typepal", project(|https://github.com/usethesource/typepal.git|, {"rascal"}, ignores={"examples"})>,
     <"typepal-boot", project(|https://github.com/usethesource/typepal.git|, {}, rascalLib=true, ignores={"examples"})>,
     <"salix-core", project(|https://github.com/usethesource/salix-core.git|, {"rascal"})>,

@@ -45,6 +45,6 @@ echo "Tail out output from rascal.log"
 tail 'rascal.log'
 
 echo "Rascal is done, now lets run the rest in 2 parallel jobs"
-runChecker 'libraries' 'flybytes' 'php-analysis' 'rascal-git' 'salix-core' 'drambiguity' 'salix-contrib'
+runChecker 'libraries' 'flybytes' 'php-analysis' 'rascal-git' 'salix-core' 'drambiguity' 'salix-contrib' 'rascal-all'
 runChecker 'core-and-lsp' 'typepal' 'rascal-core' 'rascal-lsp'
 wait
