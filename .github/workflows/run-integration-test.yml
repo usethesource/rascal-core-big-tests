@@ -85,7 +85,7 @@ jobs:
 
       - name: Typecheck rascal
         run: |
-          java -jar target/dependencies/rascal.jar Main \
+          java -jar rascal/rascal.jar Main \
             --rascalVersion "|cwd:///rascal/rascal.jar|" \
             --typepalVersion "|cwd:///typepal|" \
             --rascalCoreVersion "|cwd:///rascal-core|" \
@@ -127,7 +127,7 @@ jobs:
 
       - name: Typecheck rascal-libs
         run: |
-          java -jar target/dependencies/rascal.jar Main \
+          java -jar rascal/rascal.jar Main \
             --rascalVersion "|cwd:///rascal/rascal.jar|" \
             --typepalVersion "|cwd:///typepal|" \
             --rascalCoreVersion "|cwd:///rascal-core|" \
