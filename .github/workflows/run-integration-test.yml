@@ -47,6 +47,7 @@ jobs:
           cache: 'maven'
           cache-dependency-path: 'deps/rascal/pom.xml'
 
+
       - name: Compile rascal java
         run: mvn -B clean compile package -Drascal.tutor.skip -DskipTests -Drascal.compile.skip
         working-directory: deps/rascal
@@ -90,7 +91,7 @@ jobs:
             --rascalVersion "|cwd:///rascal/rascal.jar|" \
             --typepalVersion "|cwd:///typepal|" \
             --rascalCoreVersion "|cwd:///rascal-core|" \
-            --repoFolder "|cw:///repos|" \
+            --repoFolder "|cwd:///repos|" \
             --full false \
             --clean \
             --printWarnings \
@@ -119,7 +120,6 @@ jobs:
         with:
           java-version: 11
           distribution: 'temurin'
-          cache: 'maven'
 
       - uses: actions/download-artifact@v4
         with:
@@ -132,9 +132,6 @@ jobs:
 
       - run: ls -alh
 
-      - name: Download needed rascal-jar
-        run: mvn -B validate
-
       - name: Typecheck rascal-libs
         run: |
           java -jar rascal/rascal.jar Main \
@@ -142,7 +139,7 @@ jobs:
             --rascalVersion "|cwd:///rascal/rascal.jar|" \
             --typepalVersion "|cwd:///typepal|" \
             --rascalCoreVersion "|cwd:///rascal-core|" \
-            --repoFolder "|cw:///repos|" \
+            --repoFolder "|cwd:///repos|" \
             --full false \
             --clean \
             --printWarnings \
