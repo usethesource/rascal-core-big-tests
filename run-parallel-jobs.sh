@@ -4,9 +4,10 @@ set -eo pipefail
 
 
 CLEAN="--clean"
-BIG_DIR="${BIG_DIR:=|tmp:///big/|}"
+BIG_DIR="${BIG_DIR:=|tmp:///repo/|}"
+EXTRA_ARGS=""
 
-while getopts ":fd:" opt; do
+while getopts ":fd:r:c:t:" opt; do
   case ${opt} in
     f)
       CLEAN=""
@@ -14,11 +15,23 @@ while getopts ":fd:" opt; do
     d)
       BIG_DIR="${OPTARG}"
       ;;
+    r)
+      EXTRA_ARGS+="--rascalVersion ${OPTARG} "
+      ;;
+    c)
+      EXTRA_ARGS+="--rascalCoreVersion ${OPTARG} "
+      ;;
+    t)
+      EXTRA_ARGS+="--typepalVersion ${OPTARG} "
+      ;;
     ?)
       echo "Invalid option: -${OPTARG}."
       echo "Available: "
       echo "\t-f\tDo not remove tpls"
       echo "\t-d <loc>\tOverride location where the repositories are stored and checked"
+      echo "\t-r <loc>\tOverride location of which rascal to use (should be a jar)"
+      echo "\t-c <loc>\tOverride location of which rascal-core to use"
+      echo "\t-t <loc>\tOverride location of which typepal to use"
       exit 1
       ;;
   esac
@@ -34,7 +47,7 @@ function runChecker() {
     local name=$1
     shift
     echo "Starting $name, trail output $name.log (tail -f $name.log in different shell to check output)"
-    java -Drascal.monitor.batch -jar target/dependencies/rascal.jar Main --repoFolder "$BIG_DIR" $CLEAN --tests $@ >"$name.log" 2>&1  &
+    java -Drascal.monitor.batch -jar target/dependencies/rascal.jar Main --repoFolder "$BIG_DIR" $CLEAN $EXTRA_ARGS --tests $@ >"$name.log" 2>&1  &
 }
 
 ## first we have to run rascal

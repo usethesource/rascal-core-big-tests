@@ -6,5 +6,4 @@ BIG_DIR ?= '|tmp:///big/|'
 # make sure rascal.jar is present
 mvn validate
 
-# first we have to run rascal
-java -jar target/dependencies/rascal.jar Main --repoFolder "$BIG_DIR" --clean 
+java -jar target/dependencies/rascal.jar Main --repoFolder "$BIG_DIR" --clean

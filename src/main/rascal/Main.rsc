@@ -90,8 +90,8 @@ int updateRepos(Projects projs, loc repoFolder, bool full) {
         }
         else {
             println("**** Cloning <n>");
-            checkOutput("clone", execWithCode("git", args=["clone", *( full ? [] : ["--depth", "1"]), proj.repo.uri, n], workingDir=repoFolder));
-            checkOutput("switch", execWithCode("git", args=["switch", proj.branch], workingDir=targetFolder));
+            extraArgs = full ? [] : ["--single-branch", "--branch", proj.branch, "--depth", "1"];
+            checkOutput("clone", execWithCode("git", args=["clone", *extraArgs, proj.repo.uri, n], workingDir=repoFolder));
         }
     }
     return result;
@@ -104,7 +104,7 @@ int main(
     bool printWarnings = false, // print warnings in the final overview
     bool full=true, // do a full clone
     bool clean=true, // do a clean of the to build folders
-    loc repoFolder = |cwd:///|,
+    loc repoFolder = |tmp:///repo/|,
     loc rascalVersion=|home:///.m2/repository/org/rascalmpl/rascal/0.40.7/rascal-0.40.7.jar|,
     loc typepalVersion=|home:///.m2/repository/org/rascalmpl/typepal/0.14.0/typepal-0.14.0.jar|,
     loc rascalCoreVersion=|home:///.m2/repository/org/rascalmpl/rascal-core/0.12.4/rascal-core-0.12.4.jar|,

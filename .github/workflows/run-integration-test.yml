@@ -75,14 +75,10 @@ jobs:
         with:
           java-version: 11
           distribution: 'temurin'
-          cache: 'maven'
 
       - uses: actions/download-artifact@v4
         with:
           name: deps
-
-      - name: Download needed rascal-jar
-        run: mvn -B validate
 
       - name: Typecheck rascal
         run: |
@@ -130,7 +126,7 @@ jobs:
           name: rascal-tpls
           path: repos
 
-      - run: ls -alh
+      - run: tree repos/
 
       - name: Typecheck rascal-libs
         run: |
