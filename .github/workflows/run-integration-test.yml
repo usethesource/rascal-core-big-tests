@@ -18,7 +18,7 @@ on:
 
 jobs:
   prepare-deps:
-    runs-on: ubuntu-latest
+    runs-on: buildjet-2vcpu-ubuntu-2204
     steps:
       - uses: actions/checkout@v4
         name: 'Checkout rascal'
@@ -66,7 +66,7 @@ jobs:
 
 
   rascal:
-    runs-on: buildjet-4vcpu-ubuntu-2204
+    runs-on: buildjet-2vcpu-ubuntu-2204
     needs: prepare-deps
     steps:
       - uses: actions/checkout@v4
@@ -86,6 +86,7 @@ jobs:
       - name: Typecheck rascal
         run: |
           java -jar rascal/rascal.jar Main \
+            --memory "-Xmx3G" \
             --rascalVersion "|cwd:///rascal/rascal.jar|" \
             --typepalVersion "|cwd:///typepal|" \
             --rascalCoreVersion "|cwd:///rascal-core|" \
@@ -99,11 +100,16 @@ jobs:
         name: Store rascal tpls
         with:
           name: rascal-tpls
-          path: $RUNNER_TEMP/repos
+          path: "$RUNNER_TEMP/repos"
           retention-days: 1
 
-  rascal-libs:
+  other-projects:
     runs-on: buildjet-2vcpu-ubuntu-2204
+    strategy:
+      matrix:
+        target:
+          - "'flybytes' 'php-analysis' 'rascal-git' 'salix-core' 'drambiguity' 'salix-contrib' 'rascal-all'"
+          - "'typepal' 'rascal-lsp' 'rascal-core'"
     needs: [rascal, prepare-deps]
     steps:
       - uses: actions/checkout@v4
@@ -120,7 +126,7 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: rascal-tpls
-          path: $RUNNER_TEMP/repos
+          path: "$RUNNER_TEMP/repos"
 
       - name: Download needed rascal-jar
         run: mvn -B validate
@@ -128,6 +134,7 @@ jobs:
       - name: Typecheck rascal-libs
         run: |
           java -jar rascal/rascal.jar Main \
+            --memory "-Xmx3G" \
             --rascalVersion "|cwd:///rascal/rascal.jar|" \
             --typepalVersion "|cwd:///typepal|" \
             --rascalCoreVersion "|cwd:///rascal-core|" \
@@ -135,39 +142,4 @@ jobs:
             --full false \
             --clean \
             --printWarnings \
-             --tests 'flybytes' 'php-analysis' 'rascal-git' 'salix-core' 'drambiguity' 'salix-contrib' 'rascal-all'
-
-  rascal-core-lsp:
-    runs-on: buildjet-2vcpu-ubuntu-2204
-    needs: [rascal, prepare-deps]
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
-        with:
-          java-version: 11
-          distribution: 'temurin'
-          cache: 'maven'
-
-      - uses: actions/download-artifact@v4
-        with:
-          name: deps
-
-      - uses: actions/download-artifact@v4
-        with:
-          name: rascal-tpls
-          path: $RUNNER_TEMP/repos
-
-      - name: Download needed rascal-jar
-        run: mvn -B validate
-
-      - name: Typecheck rascal-libs
-        run: |
-          java -jar target/dependencies/rascal.jar Main \
-            --rascalVersion "|cwd:///rascal/rascal.jar|" \
-            --typepalVersion "|cwd:///typepal|" \
-            --rascalCoreVersion "|cwd:///rascal-core|" \
-            --repoFolder "|file:///$RUNNER_TEMP/repos|" \
-            --full false \
-            --clean \
-            --printWarnings \
-             --tests 'typepal' 'rascal-lsp' 'rascal-core'
+             --tests ${{ matrix.target }}
