@@ -86,7 +86,7 @@ jobs:
       - name: Typecheck rascal
         run: |
           java -jar rascal/rascal.jar Main \
-            --memory "\\-Xmx3G" \
+            --memory 3G \
             --rascalVersion "|cwd:///rascal/rascal.jar|" \
             --typepalVersion "|cwd:///typepal|" \
             --rascalCoreVersion "|cwd:///rascal-core|" \
@@ -134,7 +134,7 @@ jobs:
       - name: Typecheck rascal-libs
         run: |
           java -jar rascal/rascal.jar Main \
-            --memory "\\-Xmx3G" \
+            --memory 3G \
             --rascalVersion "|cwd:///rascal/rascal.jar|" \
             --typepalVersion "|cwd:///typepal|" \
             --rascalCoreVersion "|cwd:///rascal-core|" \

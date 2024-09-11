@@ -99,7 +99,7 @@ int updateRepos(Projects projs, loc repoFolder, bool full) {
 
 
 int main(
-    str memory = "-Xmx4G",
+    str memory = "4G",
     bool update=false, // update all projects from remote
     bool printWarnings = false, // print warnings in the final overview
     bool full=true, // do a full clone
@@ -155,7 +155,7 @@ int main(
 
     println("*** Starting nested rascal call with supplied version ***");
     runner = createProcess("java", args=[
-        memory,
+        "-Xmx<memory>",
         "-Drascal.monitor.batch", // disable fancy progress bar
         "-Drascal.compilerClasspath=<classPath>",
         "-cp", classPath,
