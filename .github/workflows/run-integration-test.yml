@@ -90,7 +90,7 @@ jobs:
             --rascalVersion "|cwd:///rascal/rascal.jar|" \
             --typepalVersion "|cwd:///typepal|" \
             --rascalCoreVersion "|cwd:///rascal-core|" \
-            --repoFolder "|file:///$RUNNER_TEMP/repos|" \
+            --repoFolder "|cw:///repos|" \
             --full false \
             --clean \
             --printWarnings \
@@ -100,7 +100,7 @@ jobs:
         name: Store rascal tpls
         with:
           name: rascal-tpls
-          path: ${{ env.RUNNER_TEMP }}/repos
+          path: repos
           retention-days: 1
           if-no-files-found: error
 
@@ -128,7 +128,9 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: rascal-tpls
-          path: ${{ env.RUNNER_TEMP }}/repos
+          path: repos
+
+      - run: ls -alh
 
       - name: Download needed rascal-jar
         run: mvn -B validate
@@ -140,7 +142,7 @@ jobs:
             --rascalVersion "|cwd:///rascal/rascal.jar|" \
             --typepalVersion "|cwd:///typepal|" \
             --rascalCoreVersion "|cwd:///rascal-core|" \
-            --repoFolder "|file:///$RUNNER_TEMP/repos|" \
+            --repoFolder "|cw:///repos|" \
             --full false \
             --clean \
             --printWarnings \
