@@ -100,8 +100,9 @@ jobs:
         name: Store rascal tpls
         with:
           name: rascal-tpls
-          path: "$RUNNER_TEMP/repos"
+          path: ${{ env.RUNNER_TEMP }}/repos
           retention-days: 1
+          if-no-files-found: error
 
   other-projects:
     runs-on: buildjet-2vcpu-ubuntu-2204
@@ -110,6 +111,7 @@ jobs:
         target:
           - "'flybytes' 'php-analysis' 'rascal-git' 'salix-core' 'drambiguity' 'salix-contrib' 'rascal-all'"
           - "'typepal' 'rascal-lsp' 'rascal-core'"
+      fail-fast: false
     needs: [rascal, prepare-deps]
     steps:
       - uses: actions/checkout@v4
@@ -126,7 +128,7 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: rascal-tpls
-          path: "$RUNNER_TEMP/repos"
+          path: ${{ env.RUNNER_TEMP }}/repos
 
       - name: Download needed rascal-jar
         run: mvn -B validate
