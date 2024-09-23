@@ -1,0 +1,72 @@
+name: Smoke test
+on:
+  workflow_dispatch:
+    inputs:
+      rascal_version:
+        description: 'rascal branch/tag to checkout'
+        required: true
+        default: 'main'
+      typepal_version:
+        description: 'typepal branch/tag to checkout'
+        required: true
+        default: 'main'
+      rascal_core_version:
+        description: 'rascal-core branch/tag to checkout'
+        required: true
+        default: 'master'
+
+jobs:
+  run-fast-set:
+    runs-on: buildjet-2vcpu-ubuntu-2204
+    steps:
+      - uses: actions/checkout@v4
+        name: 'Checkout rascal'
+        with:
+          repository: 'usethesource/rascal'
+          ref: ${{ inputs.rascal_version }}
+          path: 'deps/rascal'
+      - uses: actions/checkout@v4
+        name: 'Checkout typepal'
+        with:
+          repository: 'usethesource/typepal'
+          ref: ${{ inputs.typepal_version }}
+          path: 'deps/typepal'
+      - uses: actions/checkout@v4
+        name: 'Checkout rascal-core'
+        with:
+          repository: 'usethesource/rascal-core'
+          ref: ${{ inputs.rascal_core_version }}
+          path: 'deps/rascal-core'
+
+      - uses: actions/setup-java@v4
+        with:
+          java-version: 11
+          distribution: 'temurin'
+          cache: 'maven'
+          cache-dependency-path: 'deps/rascal/pom.xml'
+
+
+      - name: Compile rascal java
+        run: mvn -B clean compile package -Drascal.tutor.skip -DskipTests -Drascal.compile.skip
+        working-directory: deps/rascal
+
+      - name: copy rascal jar to predictable location and cleanup
+        run: |
+          rm deps/rascal/target/*-sources.jar
+          find deps/rascal/target -name 'rascal-*.jar' -exec mv '{}' deps/rascal/rascal.jar \;
+          rm -rf deps/rascal/target
+
+      - uses: actions/checkout@v4
+
+      - name: Typecheck fast-set
+        run: |
+          java -jar deps/rascal/rascal.jar Main \
+            --memory 3G \
+            --rascalVersion "|cwd:///deps/rascal/rascal.jar|" \
+            --typepalVersion "|cwd:///deps/typepal|" \
+            --rascalCoreVersion "|cwd:///deps/rascal-core|" \
+            --repoFolder "|cwd:///repos|" \
+            --full false \
+            --clean \
+            --printWarnings \
+             --tests rascal typepal salix-core flybytes
