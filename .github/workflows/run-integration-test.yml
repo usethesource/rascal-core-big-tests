@@ -21,19 +21,19 @@ jobs:
     runs-on: buildjet-2vcpu-ubuntu-2204
     steps:
       - uses: actions/checkout@v4
-        name: 'Checkout rascal'
+        name: 'Checkout rascal (${{ inputs.rascal_version }})'
         with:
           repository: 'usethesource/rascal'
           ref: ${{ inputs.rascal_version }}
           path: 'deps/rascal'
       - uses: actions/checkout@v4
-        name: 'Checkout typepal'
+        name: 'Checkout typepal (${{ inputs.typepal_version }})'
         with:
           repository: 'usethesource/typepal'
           ref: ${{ inputs.typepal_version }}
           path: 'deps/typepal'
       - uses: actions/checkout@v4
-        name: 'Checkout rascal-core'
+        name: 'Checkout rascal-core (${{ inputs.rascal_core_version }})'
         with:
           repository: 'usethesource/rascal-core'
           ref: ${{ inputs.rascal_core_version }}
