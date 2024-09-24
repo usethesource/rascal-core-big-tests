@@ -27,14 +27,14 @@ int actualMain(lrel[str, PathConfig] pcfgs, bool printWarnings) {
     lrel[str name, int seconds, int errors] stats = [];
     int errors = 0;
     for (<n, p> <- pcfgs) {
+        println("**** Building: <n>");
+
+        rascalFiles = [*find(s, "rsc") | s <- p.srcs];
+        rascalFiles = sort([f | f <- rascalFiles, !isIgnored(f, p.ignores)]);
+
+        println("**** Found <size(rascalFiles)> rascal files");
+        startTime = now();
         try {
-            println("**** Building: <n>");
-
-            rascalFiles = [*find(s, "rsc") | s <- p.srcs];
-            rascalFiles = sort([f | f <- rascalFiles, !isIgnored(f, p.ignores)]);
-
-            println("**** Found <size(rascalFiles)> rascal files");
-            startTime = now();
             result = check(rascalFiles, config(p));
             stopTime = now();
             for (checked <- result) {
@@ -49,10 +49,12 @@ int actualMain(lrel[str, PathConfig] pcfgs, bool printWarnings) {
             stats += <n, took, errorCount>;
         }
         catch ex: {
+            dur = now() - startTime;
             errors += 1;
             messages += [|unknown:///error|, error("<n> crashed with <ex>", |unkown:///|)];
             println("<n> crashed with <ex>");
-            stats += <n, 0, -1>;
+            took = (dur.hours * 60 * 60) + (dur.minutes * 60) + dur.seconds;
+            stats += <n, took, -1>;
         }
     }
     println("**** Done running, now printing messages");
