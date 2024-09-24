@@ -14,11 +14,14 @@ import util::FileSystem;
 
 RascalCompilerConfig config(PathConfig original) = getRascalCoreCompilerConfig(original[resources = original.bin]);
 
-bool isIgnored(loc f, list[loc] ignores) 
+bool isIgnored(loc f, list[loc] ignores)
     = size(ignores) > 0 && any(i <- ignores, relativize(i, f) != f);
 
 int main(str job="", bool printWarnings=false) {
-    pcfgs = readTextValueString(#lrel[str, PathConfig], fromBase64(job));
+    return actualMain(readTextValueString(#lrel[str, PathConfig], fromBase64(job)), printWarnings);
+}
+
+int actualMain(lrel[str, PathConfig] pcfgs, bool printWarnings) {
     println("Received: <size(pcfgs)> jobs to check");
     messages = [];
     lrel[str name, int seconds, int errors] stats = [];
@@ -28,8 +31,8 @@ int main(str job="", bool printWarnings=false) {
             println("**** Building: <n>");
 
             rascalFiles = [*find(s, "rsc") | s <- p.srcs];
-            rascalFiles = [f | f <- rascalFiles, !isIgnored(f, p.ignores)];
-            
+            rascalFiles = sort([f | f <- rascalFiles, !isIgnored(f, p.ignores)]);
+
             println("**** Found <size(rascalFiles)> rascal files");
             startTime = now();
             result = check(rascalFiles, config(p));

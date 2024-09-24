@@ -154,6 +154,7 @@ int main(
 
 
     println("*** Starting nested rascal call with supplied version ***");
+    println(classPath);
     runner = createProcess("java", args=[
         "-Xmx<memory>",
         "-Drascal.monitor.batch", // disable fancy progress bar
@@ -165,6 +166,7 @@ int main(
         toBase64("<pcfgs>"),
         *["--printWarnings" | true := printWarnings]
     ]);
+    //], envVars=("TRACKIO" : "true"));
 
     try {
         while (isAlive(runner)) {

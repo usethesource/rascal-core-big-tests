@@ -25,24 +25,6 @@
     </pluginRepository>
   </pluginRepositories>
 
-  <dependencies>
-    <dependency>
-      <groupId>org.rascalmpl</groupId>
-      <artifactId>rascal</artifactId>
-      <version>0.40.7</version>
-    </dependency>
-    <dependency>
-      <groupId>org.rascalmpl</groupId>
-      <artifactId>typepal</artifactId>
-      <version>0.14.0</version>
-    </dependency>
-    <dependency>
-      <groupId>org.rascalmpl</groupId>
-      <artifactId>rascal-core</artifactId>
-      <version>0.12.4</version>
-    </dependency>
-  </dependencies>
-
   <build>
     <plugins>
       <plugin>
@@ -76,4 +58,3 @@
     </plugins>
   </build>
 </project>
-    
