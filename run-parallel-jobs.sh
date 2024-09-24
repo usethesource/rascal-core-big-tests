@@ -5,10 +5,6 @@ set -eo pipefail
 source parse-args.sh
 
 
-# make sure rascal.jar is present
-echo "Making sure rascal.jar is downloaded"
-mvn validate > /dev/null 2>&1
-
 # then we run
 function runChecker() {
     local name=$1

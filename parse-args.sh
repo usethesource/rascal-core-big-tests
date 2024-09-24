@@ -2,7 +2,7 @@
 CLEAN="--clean"
 BIG_DIR="${BIG_DIR:=|tmp:///repo/|}"
 EXTRA_ARGS=""
-RASCAL_JAR="target/dependencies/rascal.jar"
+RASCAL_JAR=""
 
 function printHelp() {
   echo -e "Available: "
@@ -44,3 +44,8 @@ while getopts ":hfd:r:c:t:" opt; do
   esac
 done
 shift $(expr $OPTIND - 1 )
+
+if [ "$RASCAL_JAR" -eq "" ]; then
+  echo "Missing rascal.jar, please provide rascal jar via -r"
+  exit 1
+fi

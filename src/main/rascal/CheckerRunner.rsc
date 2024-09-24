@@ -69,5 +69,5 @@ int actualMain(lrel[str, PathConfig] pcfgs, bool printWarnings) {
     for (<n, t, e> <- stats) {
         println("- <n> took <t>s (<t/60>m) with <e> errors");
     }
-    return errors;
+    return errors > 0 ? 1 : 0;
 }
