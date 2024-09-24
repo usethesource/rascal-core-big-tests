@@ -10,7 +10,7 @@ function runChecker() {
     local name=$1
     shift
     echo "Starting $name, trail output $name.log (tail -f $name.log in different shell to check output)"
-    java -Drascal.monitor.batch -jar $RASCAL_JAR Main --repoFolder "$BIG_DIR" $CLEAN $EXTRA_ARGS --tests $@ >"$name.log" 2>&1  &
+    java -Drascal.monitor.batch -jar $RASCAL_JAR Main --update --repoFolder "$BIG_DIR" $CLEAN $EXTRA_ARGS --tests $@ >"$name.log" 2>&1  &
 }
 
 ## first we have to run rascal
