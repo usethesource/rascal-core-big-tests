@@ -17,11 +17,11 @@ RascalCompilerConfig config(PathConfig original) = getRascalCoreCompilerConfig(o
 bool isIgnored(loc f, list[loc] ignores)
     = size(ignores) > 0 && any(i <- ignores, relativize(i, f) != f);
 
-int main(str job="", bool printWarnings=false) {
-    return actualMain(readTextValueString(#lrel[str, PathConfig], fromBase64(job)), printWarnings);
+int main(str job="", bool printWarnings=false, loc repoFolder = |unknown:///|) {
+    return actualMain(readTextValueString(#lrel[str, PathConfig], fromBase64(job)), printWarnings, repoFolder);
 }
 
-int actualMain(lrel[str, PathConfig] pcfgs, bool printWarnings) {
+int actualMain(lrel[str, PathConfig] pcfgs, bool printWarnings, loc repoFolder) {
     println("Received: <size(pcfgs)> jobs to check");
     messages = [];
     lrel[str name, int seconds, int errors] stats = [];
@@ -29,7 +29,8 @@ int actualMain(lrel[str, PathConfig] pcfgs, bool printWarnings) {
     for (<n, p> <- pcfgs) {
         println("**** Building: <n>");
 
-        rascalFiles = [*find(s, "rsc") | s <- p.srcs];
+        projectRoot = repoFolder + n;
+        rascalFiles = [*find(s, "rsc") | s <- p.srcs, startsWith(s.path, projectRoot.path)];
         rascalFiles = sort([f | f <- rascalFiles, !isIgnored(f, p.ignores)]);
 
         println("**** Found <size(rascalFiles)> rascal files");

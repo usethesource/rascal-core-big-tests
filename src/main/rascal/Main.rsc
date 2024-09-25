@@ -61,12 +61,32 @@ str buildCP(loc entries...) = intercalate(getSystemProperty("path.separator"), [
 
 loc tplPath(loc repoFolder, str name) = (repoFolder + name) + "target/classes";
 
-PathConfig generatePathConfig(str name, Project proj, loc repoFolder) {
+tuple[list[loc], list[loc]] calcSourcePaths(str name, Project proj, loc repoFolder) {
     loc projectRoot = (repoFolder + name) + proj.subdir;
     srcs = proj.srcs != [] ? [projectRoot + s |  s <- proj.srcs ] : getProjectPathConfig(projectRoot).srcs;
+    ignores = [ s + i |  s<- srcs, i <- proj.ignores];
+    return <srcs, ignores>;
+}
+
+PathConfig generatePathConfig(str name, Project proj, loc repoFolder, false) {
+    <srcs, ignores> = calcSourcePaths(name, proj, repoFolder);
+    for (str dep <- proj.dependencies, <dep, projDep> <- projects) {
+        <nestedSrcs, nestedIgnores> = calcSourcePaths(dep, projDep, repoFolder);
+        srcs += nestedSrcs;
+        ignores += nestedIgnores;
+    }
     return pathConfig(
         srcs = srcs,
-        ignores = [ s + i |  s<- srcs, i <- proj.ignores],
+        ignores = ignores,
+        bin = repoFolder + "shared-tpls",
+        libs = (proj.rascalLib ? [|lib://rascal/|] : [])
+    );
+}
+PathConfig generatePathConfig(str name, Project proj, loc repoFolder, true) {
+    <srcs, ignores> = calcSourcePaths(name, proj, repoFolder);
+    return pathConfig(
+        srcs = srcs,
+        ignores = ignores,
         bin = tplPath(repoFolder, name),
         libs = [ tplPath(repoFolder, dep) | dep <- proj.dependencies ] + (proj.rascalLib ? [|lib://rascal/|] : [])
     );
@@ -100,6 +120,7 @@ int updateRepos(Projects projs, loc repoFolder, bool full) {
 
 int main(
     str memory = "4G",
+    bool libs=true, // put the tpls of dependencies on the lib path
     bool update=false, // update all projects from remote
     bool printWarnings = false, // print warnings in the final overview
     bool full=true, // do a full clone
@@ -137,7 +158,7 @@ int main(
 
     // prepare path configs
     println("*** Calculating class paths");
-    pcfgs = [<n, generatePathConfig(n, proj, repoFolder)> | n <- buildOrder, proj <- toBuild[n]];
+    pcfgs = [<n, generatePathConfig(n, proj, repoFolder, libs)> | n <- buildOrder, proj <- toBuild[n]];
 
 
     if (clean) {
@@ -162,6 +183,7 @@ int main(
         "-cp", classPath,
         "org.rascalmpl.shell.RascalShell",
         "CheckerRunner",
+        "--repoFolder", "<repoFolder>",
         "--job",
         toBase64("<pcfgs>"),
         *["--printWarnings" | true := printWarnings]

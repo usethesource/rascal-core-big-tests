@@ -7,6 +7,7 @@ RASCAL_JAR=""
 function printHelp() {
   echo -e "Available: "
   echo -e "\t-f\t\tDo not remove existing tpls"
+  echo -e "\t-s\t\tEverything on source path, no lib dependencies"
   echo -e "\t-d <loc>\tOverride location where the repositories are stored and checked"
   echo -e "\t-r <path>\tOverride path of which rascal to use (should be a jar) (not a rascal loc, but an absolute regular path)"
   echo -e "\t-c <loc>\tOverride location of which rascal-core to use"
@@ -14,7 +15,7 @@ function printHelp() {
   echo -e "\t-h\t\tThis help"
 }
 
-while getopts ":hfd:r:c:t:" opt; do
+while getopts ":hsfd:r:c:t:" opt; do
   case ${opt} in
     f)
       CLEAN=""
@@ -31,6 +32,9 @@ while getopts ":hfd:r:c:t:" opt; do
       ;;
     t)
       EXTRA_ARGS+="--typepalVersion ${OPTARG} "
+      ;;
+    s)
+      EXTRA_ARGS+="--libs false "
       ;;
     h)
       printHelp

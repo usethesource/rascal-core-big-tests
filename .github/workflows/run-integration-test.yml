@@ -14,6 +14,10 @@ on:
         description: 'rascal-core branch/tag to checkout'
         required: true
         default: 'master'
+      dependencies_on_lib_path:
+        description: 'Put tpls of dependencies on lib path'
+        required: true
+        default: 'true'
 
 
 jobs:
@@ -82,7 +86,8 @@ jobs:
 
       - name: Typecheck rascal
         run: |
-          java -jar rascal/rascal.jar Main \
+          java -Xmx500m -jar rascal/rascal.jar Main \
+            --libs ${{ inputs.dependencies_on_lib_path }}
             --memory 3G \
             --rascalVersion "|cwd:///rascal/rascal.jar|" \
             --typepalVersion "|cwd:///typepal|" \
@@ -130,7 +135,8 @@ jobs:
 
       - name: Typecheck rascal-libs
         run: |
-          java -jar rascal/rascal.jar Main \
+          java -Xmx500m -jar rascal/rascal.jar Main \
+            --libs ${{ inputs.dependencies_on_lib_path }}
             --memory 3G \
             --rascalVersion "|cwd:///rascal/rascal.jar|" \
             --typepalVersion "|cwd:///typepal|" \
