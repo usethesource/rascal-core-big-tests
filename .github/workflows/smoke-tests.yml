@@ -67,7 +67,7 @@ jobs:
       - name: Typecheck fast-set
         run: |
           java -Xmx600m -jar deps/rascal/rascal.jar Main \
-            --libs ${{ inputs.dependencies_on_lib_path }}
+            --libs "${{ inputs.dependencies_on_lib_path }}" \
             --memory 3G \
             --rascalVersion "|cwd:///deps/rascal/rascal.jar|" \
             --typepalVersion "|cwd:///deps/typepal|" \
@@ -76,4 +76,4 @@ jobs:
             --full false \
             --clean \
             --printWarnings \
-             --tests rascal typepal salix-core flybytes
+            --tests rascal typepal salix-core flybytes
