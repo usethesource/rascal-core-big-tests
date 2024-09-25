@@ -34,3 +34,4 @@ dependency-reduced-pom.xml
 .idea/
 
 *.log
+temp/
