@@ -12,7 +12,7 @@ import util::Reflective;
 import lang::rascalcore::check::Checker;
 import util::FileSystem;
 
-RascalCompilerConfig config(PathConfig original) = getRascalCoreCompilerConfig(original[resources = original.bin]);
+RascalCompilerConfig config(PathConfig original) = rascalCompilerConfig(original[resources = original.bin]);
 
 bool isIgnored(loc f, list[loc] ignores)
     = size(ignores) > 0 && any(i <- ignores, relativize(i, f) != f);
