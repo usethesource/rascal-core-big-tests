@@ -76,4 +76,4 @@ jobs:
             --full false \
             --clean \
             --printWarnings \
-            --tests rascal typepal salix-core flybytes
+            --tests rascal typepal salix-core salix-contrib flybytes
