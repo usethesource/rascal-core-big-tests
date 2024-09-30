@@ -88,7 +88,7 @@ jobs:
         run: |
           java -Xmx500m -jar rascal/rascal.jar Main \
             --libs "${{ inputs.dependencies_on_lib_path }}" \
-            --memory 3G \
+            --memory 5G \
             --rascalVersion "|cwd:///rascal/rascal.jar|" \
             --typepalVersion "|cwd:///typepal|" \
             --rascalCoreVersion "|cwd:///rascal-core|" \
@@ -133,11 +133,11 @@ jobs:
 
       - run: tree repos/
 
-      - name: Typecheck rascal-libs
+      - name: Typecheck rascal-libs (deps on libs=${{ inputs.dependencies_on_lib_path }})
         run: |
           java -Xmx500m -jar rascal/rascal.jar Main \
             --libs "${{ inputs.dependencies_on_lib_path }}" \
-            --memory 3G \
+            --memory 5G \
             --rascalVersion "|cwd:///rascal/rascal.jar|" \
             --typepalVersion "|cwd:///typepal|" \
             --rascalCoreVersion "|cwd:///rascal-core|" \
