@@ -28,7 +28,7 @@ Projects projects = {
     <"typepal", project(|https://github.com/usethesource/typepal.git|, {"rascal"}, ignores={"examples"})>,
     <"typepal-boot", project(|https://github.com/usethesource/typepal.git|, {}, rascalLib=true, ignores={"examples"})>,
     <"salix-core", project(|https://github.com/usethesource/salix-core.git|, {"rascal"})>,
-    <"salix-contrib", project(|https://github.com/usethesource/salix-contrib.git|, {"rascal", "salix-core"})>,
+    <"salix-contrib", project(|https://github.com/usethesource/salix-contrib.git|, {"rascal", "salix-core"}, branch="chore/update-latest-rascal-release")>,
     <"flybytes", project(|https://github.com/usethesource/flybytes.git|, {"rascal"}, branch="chore/update-latest-rascal-release")>, // temporary use pr branch untill it's merged in main
     //<"drambiguity", project(|https://github.com/cwi-swat/drambiguity.git|, {"rascal", "salix-core"})>,
     <"drambiguity", project(|https://github.com/SWAT-engineering/drambiguity.git|, {"rascal", "salix-core"}, branch="chore/update-rascal-dependencies")>,
