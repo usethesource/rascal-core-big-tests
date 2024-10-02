@@ -35,7 +35,8 @@ Projects projects = {
     <"rascal-git", project(|https://github.com/cwi-swat/rascal-git.git|, {"rascal"})>,
     <"php-analysis", project(|https://github.com/cwi-swat/php-analysis.git|, {"rascal", "rascal-git"})>,
     <"rascal-core", project(|https://github.com/usethesource/rascal-core.git|, {"rascal", "typepal"}, branch="master")>,
-    <"rascal-lsp", project(|https://github.com/usethesource/rascal-language-servers.git|, {"rascal", "typepal", "rascal-core"}, subdir="rascal-lsp")>
+    <"rascal-lsp-all", project(|https://github.com/usethesource/rascal-language-servers.git|, {"rascal", "typepal", "rascal-core"}, subdir="rascal-lsp")>,
+    <"rascal-lsp", project(|https://github.com/usethesource/rascal-language-servers.git|, {"rascal"}, ignores={"lang/rascal/lsp/refactor", "lang/rascal/tests/rename"}, subdir="rascal-lsp")>
 };
 
 bool isWindows = /win/i := getSystemProperty("os.name");
