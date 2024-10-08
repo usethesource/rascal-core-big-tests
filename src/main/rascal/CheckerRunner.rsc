@@ -40,8 +40,10 @@ int actualMain(lrel[str, PathConfig] pcfgs, bool printWarnings, loc repoFolder) 
             stopTime = now();
             for (checked <- result) {
                 messages += sort([<checked.src.top, m> | m <- checked.messages]);
-                println("*** Messages in <checked.src>:");
-                iprintln(checked.messages);
+                if (size(checked.messages) > 0) {
+                    println("*** Messages in <checked.src>:");
+                    iprintln(checked.messages);
+                }
             }
             dur = stopTime - startTime;
             took = (dur.hours * 60 * 60) + (dur.minutes * 60) + dur.seconds;
@@ -70,7 +72,7 @@ int actualMain(lrel[str, PathConfig] pcfgs, bool printWarnings, loc repoFolder) 
     }
     println("**** stats:");
     for (<n, t, e> <- stats) {
-        println("- <n> took <t>s (<t/60>m) with <e> errors");
+        println("- <n> took <t>s (<t/60>m) with <e> <e == -1? "(CRASH)":""> errors");
     }
     return errors > 0 ? 1 : 0;
 }
