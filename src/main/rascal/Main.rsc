@@ -198,7 +198,7 @@ int main(
             "-cp", buildFSPath(rascalVersion),
             "org.rascalmpl.shell.RascalCompile",
             "-srcs", *[ "<s>" | s <- p.srcs],
-            "-libs", *[ "<l>" | l <- p.libs],
+            *["-libs" | p.libs != []], *[ "<l>" | l <- p.libs],
             "-bin", "<p.bin>",
             "-modules", *[ "<f>" | f <- rascalFiles]
         ]);
