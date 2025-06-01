@@ -6,14 +6,6 @@ on:
         description: 'rascal branch/tag to checkout'
         required: true
         default: 'main'
-      typepal_version:
-        description: 'typepal branch/tag to checkout'
-        required: true
-        default: 'main'
-      rascal_core_version:
-        description: 'rascal-core branch/tag to checkout'
-        required: true
-        default: 'master'
       dependencies_on_lib_path:
         description: 'Put tpls of dependencies on lib path'
         required: true
@@ -30,19 +22,6 @@ jobs:
           repository: 'usethesource/rascal'
           ref: ${{ inputs.rascal_version }}
           path: 'deps/rascal'
-      - uses: actions/checkout@v4
-        name: 'Checkout typepal (${{ inputs.typepal_version }})'
-        with:
-          repository: 'usethesource/typepal'
-          ref: ${{ inputs.typepal_version }}
-          path: 'deps/typepal'
-      - uses: actions/checkout@v4
-        name: 'Checkout rascal-core (${{ inputs.rascal_core_version }})'
-        with:
-          repository: 'usethesource/rascal-core'
-          ref: ${{ inputs.rascal_core_version }}
-          path: 'deps/rascal-core'
-
 
       - uses: actions/setup-java@v4
         with:
@@ -90,8 +69,6 @@ jobs:
             --libs "${{ inputs.dependencies_on_lib_path }}" \
             --memory 5G \
             --rascalVersion "|cwd:///rascal/rascal.jar|" \
-            --typepalVersion "|cwd:///typepal|" \
-            --rascalCoreVersion "|cwd:///rascal-core|" \
             --repoFolder "|cwd:///repos|" \
             --full false \
             --clean \
@@ -139,8 +116,6 @@ jobs:
             --libs "${{ inputs.dependencies_on_lib_path }}" \
             --memory 5G \
             --rascalVersion "|cwd:///rascal/rascal.jar|" \
-            --typepalVersion "|cwd:///typepal|" \
-            --rascalCoreVersion "|cwd:///rascal-core|" \
             --repoFolder "|cwd:///repos|" \
             --full false \
             --clean \

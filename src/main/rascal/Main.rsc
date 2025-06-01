@@ -3,11 +3,13 @@ module Main
 import String;
 import IO;
 import List;
+import Location;
 import util::Reflective;
 import util::SystemAPI;
 import util::FileSystem;
 import analysis::graphs::Graph;
 import util::ShellExec;
+import util::Benchmark;
 
 data Project
     = project(
@@ -81,7 +83,7 @@ PathConfig generatePathConfig(str name, Project proj, loc repoFolder, false) {
         srcs = srcs,
         ignores = ignores,
         bin = repoFolder + "shared-tpls",
-        libs = [repoFolder + "shared-tpls"] + (proj.rascalLib ? [|lib://rascal/|] : [])
+        libs = [repoFolder + "shared-tpls"] + (proj.rascalLib ? [|std:///|] : [])
     );
 }
 PathConfig generatePathConfig(str name, Project proj, loc repoFolder, true) {
@@ -90,7 +92,7 @@ PathConfig generatePathConfig(str name, Project proj, loc repoFolder, true) {
         srcs = srcs,
         ignores = ignores,
         bin = tplPath(repoFolder, name),
-        libs = [ tplPath(repoFolder, dep) | dep <- proj.dependencies ] + (proj.rascalLib ? [|lib://rascal/|] : [])
+        libs = [ tplPath(repoFolder, dep) | dep <- proj.dependencies ] + (proj.rascalLib ? [|std:///|] : [])
     );
 }
 
@@ -119,6 +121,9 @@ int updateRepos(Projects projs, loc repoFolder, bool full) {
     return result;
 }
 
+bool isIgnored(loc f, list[loc] ignores)
+    = size(ignores) > 0 && any(i <- ignores, relativize(i, f) != f);
+
 
 int main(
     str memory = "4G",
@@ -128,9 +133,7 @@ int main(
     bool full=true, // do a full clone
     bool clean=true, // do a clean of the to build folders
     loc repoFolder = |tmp:///repo/|,
-    loc rascalVersion=|home:///.m2/repository/org/rascalmpl/rascal/0.40.7/rascal-0.40.7.jar|,
-    loc typepalVersion=|home:///.m2/repository/org/rascalmpl/typepal/0.14.0/typepal-0.14.0.jar|,
-    loc rascalCoreVersion=|home:///.m2/repository/org/rascalmpl/rascal-core/0.12.4/rascal-core-0.12.4.jar|,
+    loc rascalVersion=|home:///.m2/repository/org/rascalmpl/rascal/0.41.0-RC46/rascal-0.41.0-RC46.jar|,
     set[str] tests = {/*all*/}
     ) {
     mkDirectory(repoFolder);
@@ -171,52 +174,61 @@ int main(
         }
     }
 
-    // build class path
-    classPath = buildCP(typepalVersion, rascalCoreVersion, rascalVersion);
+    result = 0;
 
-
-
-    println("*** Starting nested rascal call with supplied version ***");
-    println(classPath);
-    runner = createProcess("java", args=[
-        "-Xmx<memory>",
-        "-Drascal.monitor.batch", // disable fancy progress bar
-        "-Drascal.compilerClasspath=<classPath>",
-        "-cp", classPath,
-        "org.rascalmpl.shell.RascalShell",
-        "CheckerRunner",
-        "--repoFolder", "<repoFolder>",
-        "--job",
-        toBase64("<pcfgs>"),
-        *["--printWarnings" | true := printWarnings]
-    ]);
-    //], envVars=("TRACKIO" : "true"));
-
-    try {
-        while (isAlive(runner)) {
-            stdOut = readWithWait(runner, 500);
-            if (stdOut != "") {
-                print(stdOut);
-            }
-            stdErr = readFromErr(runner);
-            while (stdErr != "") {
-                println(stdErr);
-                stdErr = readFromErr(runner);
+    for (n <- buildOrder, proj <- toBuild[n]) {
+        println("*** Preparing: <n>");
+        p = generatePathConfig(n, proj, repoFolder, libs);
+        if (clean) {
+            for (f <- find(p.bin, "tpl")) {
+                remove(f);
             }
         }
-        println(readEntireStream(runner));
-        println(readEntireErrStream(runner));
-        result = exitCode(runner);
+        println(p);
+        projectRoot = repoFolder + n;
+        rProjectRoot = resolveLocation(projectRoot);
+        rascalFiles = [*find(s, "rsc") | s <- p.srcs, (startsWith(s.path, projectRoot.path) || startsWith(s.path, rProjectRoot.path))];
+        rascalFiles = sort([f | f <- rascalFiles, !isIgnored(f, p.ignores)]);
+        println("*** Starting: <n> (<size(rascalFiles)> to check)");
+        startTime = realTime();
+        runner = createProcess("java", args=[
+            "-Xmx<memory>",
+            "-Drascal.monitor.batch", // disable fancy progress bar
+            "-Drascal.compilerClasspath=<buildFSPath(rascalVersion)>",
+            "-cp", buildFSPath(rascalVersion),
+            "org.rascalmpl.shell.RascalCompile",
+            "-srcs", *[ "<s>" | s <- p.srcs],
+            "-libs", *[ "<l>" | l <- p.libs],
+            "-bin", "<p.bin>",
+            "-modules", *[ "<f>" | f <- rascalFiles]
+        ]);
+        try {
+            while (isAlive(runner)) {
+                stdOut = readWithWait(runner, 500);
+                if (stdOut != "") {
+                    print(stdOut);
+                }
+                stdErr = readFromErr(runner);
+                while (stdErr != "") {
+                    println(stdErr);
+                    stdErr = readFromErr(runner);
+                }
+            }
+            stopTime = realTime();
+            println(readEntireStream(runner));
+            println(readEntireErrStream(runner));
+            code = exitCode(runner);
+            result += code;
+            println("*** Finished: <n> < code == 0 ? "✅" : "❌ Failed">");
+            println("*** Duration: <(stopTime - startTime)/1000>s");
+        }
+        catch ex :{
+            println("Running the runner for <n> crashed with <ex>");
+            result += 1;
+        }
+        finally {
+            killProcess(runner);
+        }
     }
-    catch ex :{
-        println("Running the runner crashed with <ex>");
-        result += 1;
-    }
-    finally {
-        killProcess(runner);
-    }
-
-    println("Nested runner is done, result: <result>");
-
     return result;
 }
