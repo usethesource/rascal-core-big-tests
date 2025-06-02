@@ -218,8 +218,7 @@ int main(
             println(readEntireErrStream(runner));
             code = exitCode(runner);
             result += code;
-            println("*** Finished: <n> < code == 0 ? "✅" : "❌ Failed">");
-            println("*** Duration: <(stopTime - startTime)/1000>s");
+            println("*** Finished: <n> < code == 0 ? "✅" : "❌ Failed"> (<(stopTime - startTime)/1000>s)");
             stats += <n, code, (stopTime - startTime)/1000>;
         }
         catch ex :{
