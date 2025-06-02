@@ -88,8 +88,9 @@ jobs:
     strategy:
       matrix:
         target:
-          - "'rascal-lsp' 'flybytes' 'php-analysis' 'rascal-git' 'salix-core' 'drambiguity' 'salix-contrib' 'rascal-all'"
-          - "'typepal' 'rascal-lsp-all' 'rascal-core'"
+          - "'rascal-lsp' 'flybytes' 'salix-core' 'salix-contrib'"
+          - "'php-analysis' 'rascal-git' 'drambiguity' 'rascal-all'"
+          - "'typepal' 'rascal-lsp-all'"
       fail-fast: false
     needs: [rascal, prepare-deps]
     steps:

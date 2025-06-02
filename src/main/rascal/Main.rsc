@@ -32,13 +32,11 @@ Projects projects = {
     <"salix-core", project(|https://github.com/usethesource/salix-core.git|, {"rascal"})>,
     <"salix-contrib", project(|https://github.com/usethesource/salix-contrib.git|, {"rascal", "salix-core"})>,
     <"flybytes", project(|https://github.com/usethesource/flybytes.git|, {"rascal"})>,
-    //<"drambiguity", project(|https://github.com/cwi-swat/drambiguity.git|, {"rascal", "salix-core"})>,
-    <"drambiguity", project(|https://github.com/SWAT-engineering/drambiguity.git|, {"rascal", "salix-core"}, branch="chore/update-rascal-dependencies")>,
+    <"drambiguity", project(|https://github.com/cwi-swat/drambiguity.git|, {"rascal", "salix-core"})>,
     <"rascal-git", project(|https://github.com/cwi-swat/rascal-git.git|, {"rascal"})>,
     <"php-analysis", project(|https://github.com/cwi-swat/php-analysis.git|, {"rascal", "rascal-git"})>,
-    <"rascal-core", project(|https://github.com/usethesource/rascal-core.git|, {"rascal", "typepal"}, branch="master")>,
-    <"rascal-lsp-all", project(|https://github.com/usethesource/rascal-language-servers.git|, {"rascal", "typepal", "rascal-core"}, subdir="rascal-lsp")>,
-    <"rascal-lsp", project(|https://github.com/usethesource/rascal-language-servers.git|, {"rascal"}, ignores={"lang/rascal/lsp/refactor", "lang/rascal/tests/rename"}, subdir="rascal-lsp")>
+    <"rascal-lsp-all", project(|https://github.com/usethesource/rascal-language-servers.git|, {"rascal", "typepal"}, subdir="rascal-lsp")>,
+    <"rascal-lsp", project(|https://github.com/usethesource/rascal-language-servers.git|, {"rascal"}, ignores={"lang/rascal/lsp/refactor", "lang/rascal/tests/rename", "lang/rascal/lsp/IDECheckerWrapper.rsc"}, subdir="rascal-lsp")>
 };
 
 bool isWindows = /win/i := getSystemProperty("os.name");
@@ -129,7 +127,6 @@ int main(
     str memory = "4G",
     bool libs=true, // put the tpls of dependencies on the lib path
     bool update=false, // update all projects from remote
-    bool printWarnings = false, // print warnings in the final overview
     bool full=true, // do a full clone
     bool clean=true, // do a clean of the to build folders
     loc repoFolder = |tmp:///repo/|,
@@ -176,6 +173,8 @@ int main(
 
     result = 0;
 
+    lrel[str, int, int] stats = [];
+
     for (n <- buildOrder, proj <- toBuild[n]) {
         println("*** Preparing: <n>");
         p = generatePathConfig(n, proj, repoFolder, libs);
@@ -221,6 +220,7 @@ int main(
             result += code;
             println("*** Finished: <n> < code == 0 ? "✅" : "❌ Failed">");
             println("*** Duration: <(stopTime - startTime)/1000>s");
+            stats += <n, code, (stopTime - startTime)/1000>;
         }
         catch ex :{
             println("Running the runner for <n> crashed with <ex>");
@@ -229,6 +229,10 @@ int main(
         finally {
             killProcess(runner);
         }
+    }
+    println("******\nDone running ");
+    for (<n, e, t> <- stats) {
+        println("- <n> <e == 0 ? "✅" : "❌"> <t>s");
     }
     return result;
 }
