@@ -26,7 +26,7 @@ alias Projects = rel[str name, Project config];
 
 Projects projects = {
     <"rascal", project(|https://github.com/usethesource/rascal.git|, {}, srcs = ["src/org/rascalmpl/library"], ignores={"experiments", "resource", "lang/rascal/tests", "lang/rascal/syntax/test"})>,
-    <"rascal-all", project(|https://github.com/usethesource/rascal.git|, {"typepal"})>,
+    <"rascal-all", project(|https://github.com/usethesource/rascal.git|, {})>,
     <"typepal", project(|https://github.com/usethesource/typepal.git|, {"rascal"}, ignores={"examples"})>,
     <"typepal-boot", project(|https://github.com/usethesource/typepal.git|, {}, rascalLib=true, ignores={"examples"})>,
     <"salix-core", project(|https://github.com/usethesource/salix-core.git|, {"rascal"})>,
@@ -35,7 +35,7 @@ Projects projects = {
     <"drambiguity", project(|https://github.com/cwi-swat/drambiguity.git|, {"rascal", "salix-core"})>,
     <"rascal-git", project(|https://github.com/cwi-swat/rascal-git.git|, {"rascal"})>,
     <"php-analysis", project(|https://github.com/cwi-swat/php-analysis.git|, {"rascal", "rascal-git"})>,
-    <"rascal-lsp-all", project(|https://github.com/usethesource/rascal-language-servers.git|, {"rascal-all", "typepal"}, subdir="rascal-lsp")>,
+    <"rascal-lsp-all", project(|https://github.com/usethesource/rascal-language-servers.git|, {"rascal-all"}, subdir="rascal-lsp", srcs=["src/main/rascal"])>,
     <"rascal-lsp", project(|https://github.com/usethesource/rascal-language-servers.git|, {"rascal"}, ignores={"lang/rascal/lsp/refactor", "lang/rascal/tests/rename", "lang/rascal/lsp/IDECheckerWrapper.rsc"}, subdir="rascal-lsp")>
 };
 
@@ -63,10 +63,12 @@ str buildCP(loc entries...) = intercalate(getSystemProperty("path.separator"), [
 
 loc tplPath(loc repoFolder, str name) = (repoFolder + name) + "target/classes";
 
+loc projectRoot(loc repoFolder, str name, Project proj) = (repoFolder + name) + proj.subdir;
+
+
 tuple[list[loc], list[loc]] calcSourcePaths(str name, Project proj, loc repoFolder) {
-    loc projectRoot = (repoFolder + name) + proj.subdir;
-    srcs = proj.srcs != [] ? [projectRoot + s |  s <- proj.srcs ] : getProjectPathConfig(projectRoot).srcs;
-    ignores = [ s + i |  s<- srcs, i <- proj.ignores];
+    srcs = proj.srcs != [] ? [projectRoot(repoFolder, name, proj) + s |  s <- proj.srcs ] : getProjectPathConfig(projectRoot(repoFolder, name, proj)).srcs;
+    ignores = [ s + i |  s<- srcs, s.scheme != "jar+file",  i <- proj.ignores];
     return <srcs, ignores>;
 }
 
@@ -78,6 +80,7 @@ PathConfig generatePathConfig(str name, Project proj, loc repoFolder, false) {
         ignores += nestedIgnores;
     }
     return pathConfig(
+        projectRoot = projectRoot(repoFolder, name, proj),
         srcs = srcs,
         ignores = ignores,
         bin = repoFolder + "shared-tpls",
@@ -86,12 +89,25 @@ PathConfig generatePathConfig(str name, Project proj, loc repoFolder, false) {
 }
 PathConfig generatePathConfig(str name, Project proj, loc repoFolder, true) {
     <srcs, ignores> = calcSourcePaths(name, proj, repoFolder);
-    return pathConfig(
+    result = pathConfig(
+        projectRoot = projectRoot(repoFolder, name, proj),
         srcs = srcs,
         ignores = ignores,
         bin = tplPath(repoFolder, name),
         libs = [ tplPath(repoFolder, dep) | dep <- proj.dependencies ] + (proj.rascalLib ? [|std:///|] : [])
     );
+    /*
+    if (name == "rascal-lsp-all" || name == "rascal-all") {
+        // we have to add typepal to the lib path
+        rascalPcfg = getProjectPathConfig(repoFolder + "rascal-all");
+        result.libs += [l | l <- (rascalPcfg.srcs + rascalPcfg.libs), l.scheme == "mvn", /typepal/ := l.authority];
+        if (name == "rascal-all") {
+            // and remove typepal from the srcs
+            result.srcs = [s | s <- result.srcs, s.scheme != "mvn", /typepal/ !:= s.authority];
+        }
+    }
+    */
+    return result;
 }
 
 int updateRepos(Projects projs, loc repoFolder, bool full) {
@@ -184,7 +200,7 @@ int main(
             }
         }
         println(p);
-        projectRoot = repoFolder + n;
+        loc projectRoot = repoFolder + n;
         rProjectRoot = resolveLocation(projectRoot);
         rascalFiles = [*find(s, "rsc") | s <- p.srcs, (startsWith(s.path, projectRoot.path) || startsWith(s.path, rProjectRoot.path))];
         rascalFiles = sort([f | f <- rascalFiles, !isIgnored(f, p.ignores)]);
