@@ -38,7 +38,7 @@ jobs:
       - name: copy rascal jar to predictable location and cleanup
         run: |
           rm deps/rascal/target/*-sources.jar
-          find deps/rascal/target -name 'rascal-*.jar' -exec mv '{}' deps/rascal/rascal.jar \;
+          find deps/rascal/target -maxdepth 1 -name 'rascal-*.jar' -exec mv '{}' deps/rascal/rascal.jar \;
           rm -rf deps/rascal/target
 
       - uses: actions/upload-artifact@v4
