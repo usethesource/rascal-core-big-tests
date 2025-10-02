@@ -67,7 +67,7 @@ jobs:
         run: |
           java -Xmx500m -jar rascal/rascal.jar Main \
             --libs "${{ inputs.dependencies_on_lib_path }}" \
-            --memory 5G \
+            --memory 14G \
             --rascalVersion "|cwd:///rascal/rascal.jar|" \
             --repoFolder "|cwd:///repos|" \
             --full false \
@@ -113,7 +113,7 @@ jobs:
         run: |
           java -Xmx1G -jar rascal/rascal.jar Main \
             --libs "${{ inputs.dependencies_on_lib_path }}" \
-            --memory 5G \
+            --memory 13G \
             --rascalVersion "|cwd:///rascal/rascal.jar|" \
             --repoFolder "|cwd:///repos|" \
             --full false \
