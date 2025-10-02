@@ -50,7 +50,7 @@ jobs:
 
 
   rascal:
-    runs-on: buildjet-2vcpu-ubuntu-2204
+    runs-on: buildjet-4vcpu-ubuntu-2204
     needs: prepare-deps
     steps:
       - uses: actions/checkout@v4
@@ -83,7 +83,7 @@ jobs:
           if-no-files-found: error
 
   other-projects:
-    runs-on: buildjet-2vcpu-ubuntu-2204
+    runs-on: buildjet-4vcpu-ubuntu-2204
     strategy:
       matrix:
         target:

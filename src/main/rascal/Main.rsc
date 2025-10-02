@@ -19,14 +19,16 @@ data Project
         str branch="main", // branch to checkout from the remote
         str subdir="", // if the rascal project is not at the root of the repo
         list[str] srcs = [], // override source calculation
-        set[str] ignores = {} // directories to ignore
+        set[str] ignores = {}, // directories to ignore
+        bool parallel = false,
+        set[str] parallelPreCheck = {}
     );
 
 alias Projects = rel[str name, Project config];
 
 Projects projects = {
-    <"rascal", project(|https://github.com/usethesource/rascal.git|, {}, srcs = ["src/org/rascalmpl/library"], ignores={"experiments", "resource", "lang/rascal/tests", "lang/rascal/syntax/test"})>,
-    <"rascal-all", project(|https://github.com/usethesource/rascal.git|, {})>,
+    <"rascal", project(|https://github.com/usethesource/rascal.git|, {}, srcs = ["src/org/rascalmpl/library"], ignores={"experiments", "resource", "lang/rascal/tests", "lang/rascal/syntax/test"}, parallel = true, parallelPreCheck = {"src/org/rascalmpl/library/Prelude.rsc"})>,
+    <"rascal-all", project(|https://github.com/usethesource/rascal.git|, {}, parallel = true, parallelPreCheck = {"src/org/rascalmpl/library/Prelude.rsc"})>,
     <"typepal", project(|https://github.com/usethesource/typepal.git|, {"rascal"}, ignores={"examples"})>,
     <"typepal-boot", project(|https://github.com/usethesource/typepal.git|, {}, rascalLib=true, ignores={"examples"})>,
     <"salix-core", project(|https://github.com/usethesource/salix-core.git|, {"rascal"})>,
@@ -138,9 +140,20 @@ int updateRepos(Projects projs, loc repoFolder, bool full) {
 bool isIgnored(loc f, list[loc] ignores)
     = size(ignores) > 0 && any(i <- ignores, relativize(i, f) != f);
 
+list[str] addParallalFlags(Project proj, PathConfig pcfg, list[loc] rascalFiles, int maxCores) {
+    if (!proj.parallel) {
+        return [];
+    }
+    result = ["--parallel", "--parallelMax", "<maxCores>"];
+    for (pc <- proj.parallelPreCheck, f <- rascalFiles, endsWith(f.path, pc)) {
+        result += ["--parallelPreChecks", "<f>"];
+    }
+    return result;
+}
 
 int main(
     str memory = "4G",
+    int maxCores = 4,
     bool libs=true, // put the tpls of dependencies on the lib path
     bool update=false, // update all projects from remote
     bool full=true, // do a full clone
@@ -212,6 +225,7 @@ int main(
             "-Drascal.compilerClasspath=<buildFSPath(rascalVersion)>",
             "-cp", buildFSPath(rascalVersion),
             "org.rascalmpl.shell.RascalCompile",
+            *addParallalFlags(proj, p, rascalFiles, maxCores),
             "-srcs", *[ "<s>" | s <- p.srcs],
             *["-libs" | p.libs != []], *[ "<l>" | l <- p.libs],
             "-bin", "<p.bin>",
