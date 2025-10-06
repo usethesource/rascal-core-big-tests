@@ -64,6 +64,8 @@ jobs:
           name: deps
 
       - name: Typecheck rascal
+        env:
+          JAVA_TOOL_OPTIONS: "-Djava.io.tmpdir=$RUNNER_TEMP"
         run: |
           java -Xmx500m -jar rascal/rascal.jar Main \
             --libs "${{ inputs.dependencies_on_lib_path }}" \
@@ -110,6 +112,8 @@ jobs:
       - run: tree repos/
 
       - name: Typecheck rascal-libs (deps on libs=${{ inputs.dependencies_on_lib_path }})
+        env:
+          JAVA_TOOL_OPTIONS: "-Djava.io.tmpdir=$RUNNER_TEMP"
         run: |
           java -Xmx1G -jar rascal/rascal.jar Main \
             --libs "${{ inputs.dependencies_on_lib_path }}" \
