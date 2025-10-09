@@ -7,6 +7,7 @@ import Location;
 import util::Reflective;
 import util::SystemAPI;
 import util::FileSystem;
+import util::SystemAPI;
 import analysis::graphs::Graph;
 import util::ShellExec;
 import util::Benchmark;
@@ -28,7 +29,7 @@ alias Projects = rel[str name, Project config];
 
 Projects projects = {
     <"rascal", project(|https://github.com/usethesource/rascal.git|, {}, srcs = ["src/org/rascalmpl/library"], ignores={"experiments", "resource", "lang/rascal/tests", "lang/rascal/syntax/test"}, parallel = true, parallelPreCheck = {"src/org/rascalmpl/library/Prelude.rsc"})>,
-    <"rascal-all", project(|https://github.com/usethesource/rascal.git|, {}, ignores={"lang/rascal/tutor/examples"}, parallel = true, parallelPreCheck = {"src/org/rascalmpl/library/Prelude.rsc", "src/org/rascalmpl/compiler/lang/rascalcore/check/CheckerCommon.rsc"})>,
+    <"rascal-all", project(|https://github.com/usethesource/rascal.git|, {}, branch=(getSystemProperties()["RASCAL_ALL_BRANCH"] ? "main"), ignores={"lang/rascal/tutor/examples", "NestedOr.rsc"}, parallel = true, parallelPreCheck = {"src/org/rascalmpl/library/Prelude.rsc", "src/org/rascalmpl/compiler/lang/rascalcore/check/CheckerCommon.rsc"})>,
     <"typepal", project(|https://github.com/usethesource/typepal.git|, {"rascal"}, ignores={"examples"})>,
     <"typepal-boot", project(|https://github.com/usethesource/typepal.git|, {}, rascalLib=true, ignores={"examples"})>,
     <"salix-core", project(|https://github.com/usethesource/salix-core.git|, {"rascal"})>,
@@ -138,7 +139,7 @@ int updateRepos(Projects projs, loc repoFolder, bool full) {
 }
 
 bool isIgnored(loc f, list[loc] ignores)
-    = size(ignores) > 0 && any(i <- ignores, relativize(i, f) != f);
+    = size(ignores) > 0 && any(i <- ignores, (relativize(i, f) != f || i == f));
 
 list[str] addParallalFlags(Project proj, PathConfig pcfg, list[loc] rascalFiles, int maxCores) {
     if (!proj.parallel) {

@@ -61,7 +61,7 @@ jobs:
         env:
           JAVA_TOOL_OPTIONS: "-Djava.io.tmpdir=${{ runner.temp }}"
         run: |
-          java -Xmx500m -jar ${{ runner.temp }}/rascal.jar Main \
+          java -DRASCAL_ALL_BRANCH="${{ inputs.rascal_version }}" -Xmx500m -jar ${{ runner.temp }}/rascal.jar Main \
             --libs "${{ inputs.dependencies_on_lib_path }}" \
             --maxCores 4 \
             --memory 14G \
