@@ -74,7 +74,7 @@ jobs:
             --repoFolder "|cwd:///repos|" \
             --full false \
             --clean \
-             --tests "'rascal' 'flybytes' 'salix-core' 'salix-contrib' 'drambiguity' 'rascal-lsp' 'rascal-git' 'php-analysis' 'typepal'"
+             --tests 'rascal' 'flybytes' 'salix-core' 'salix-contrib' 'drambiguity' 'rascal-lsp' 'rascal-git' 'php-analysis' 'typepal'
 
   full-compiler-tests:
     runs-on: buildjet-4vcpu-ubuntu-2204
@@ -102,4 +102,4 @@ jobs:
             --repoFolder "|cwd:///repos|" \
             --full false \
             --clean \
-             --tests "'rascal-all' 'rascal-lsp-all'"
+             --tests 'rascal-all' 'rascal-lsp-all'
