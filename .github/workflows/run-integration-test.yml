@@ -17,7 +17,7 @@ env:
   IS_OWN_PR: "${{ secrets.MAVEN_MIRROR_URL }}"
 
 jobs:
-  integration-test:
+  test:
     runs-on: buildjet-4vcpu-ubuntu-2204
     strategy:
       matrix:
