@@ -13,8 +13,14 @@ on:
 
 
 jobs:
-  prepare-deps:
-    runs-on: ubuntu-latest
+  integration-test:
+    runs-on: buildjet-4vcpu-ubuntu-2204
+    strategy:
+      matrix:
+        target:
+          - "'rascal' 'flybytes' 'salix-core' 'salix-contrib' 'drambiguity' 'rascal-lsp' 'rascal-git' 'php-analysis' 'typepal'"
+          - "'rascal-all' 'rascal-lsp-all'"
+      fail-fast: false
     steps:
       - uses: actions/checkout@v4
         name: 'Checkout rascal (${{ inputs.rascal_version }})'
@@ -22,84 +28,34 @@ jobs:
           repository: 'usethesource/rascal'
           ref: ${{ inputs.rascal_version }}
           path: 'deps/rascal'
-
       - uses: actions/setup-java@v4
         with:
           java-version: 11
           distribution: 'temurin'
           cache: 'maven'
           cache-dependency-path: 'deps/rascal/pom.xml'
-
-
       - name: Compile rascal java
-        run: mvn -B clean compile package -Drascal.tutor.skip -DskipTests -Drascal.compile.skip
+        run: mvn -B clean compile package -Drascal.tutor.skip -DskipTests -Drascal.compile.skip -Drascal.package.skip
         working-directory: deps/rascal
-
       - name: copy rascal jar to predictable location and cleanup
         run: |
           rm deps/rascal/target/*-sources.jar
-          find deps/rascal/target -maxdepth 1 -name 'rascal-*.jar' -exec mv '{}' deps/rascal/rascal.jar \;
-          rm -rf deps/rascal/target
+          find deps/rascal/target -maxdepth 1 -name 'rascal-*.jar' -exec mv '{}' ${{ runner.temp }}/rascal.jar \;
+          rm -rf deps
 
-      - uses: actions/upload-artifact@v4
-        name: 'Store dependencies for the other jobs'
-        with:
-          name: deps
-          path: deps/
-          retention-days: 1
+      - name: Checkout integration-script
+        uses: actions/checkout@v4
 
-  rascal-and-libs:
-    runs-on: buildjet-2vcpu-ubuntu-2204
-    needs: prepare-deps
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
-        with:
-          java-version: 11
-          distribution: 'temurin'
-
-      - uses: actions/download-artifact@v4
-        with:
-          name: deps
-
-      - name: Typecheck rascal and libraries
+      - name: Typecheck
         env:
           JAVA_TOOL_OPTIONS: "-Djava.io.tmpdir=${{ runner.temp }}"
         run: |
-          java -Xmx500m -jar rascal/rascal.jar Main \
+          java -Xmx500m -jar ${{ runner.temp }}/rascal.jar/rascal.jar Main \
             --libs "${{ inputs.dependencies_on_lib_path }}" \
-            --maxCores 2
-            --memory 6G \
-            --rascalVersion "|cwd:///rascal/rascal.jar|" \
-            --repoFolder "|cwd:///repos|" \
-            --full false \
-            --clean \
-             --tests 'rascal' 'flybytes' 'salix-core' 'salix-contrib' 'drambiguity' 'rascal-lsp' 'rascal-git' 'php-analysis' 'typepal'
-
-  full-compiler-tests:
-    runs-on: buildjet-4vcpu-ubuntu-2204
-    needs: prepare-deps
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
-        with:
-          java-version: 11
-          distribution: 'temurin'
-
-      - uses: actions/download-artifact@v4
-        with:
-          name: deps
-
-      - name: Typecheck rascal-compiler and rascal-lsp rename code
-        env:
-          JAVA_TOOL_OPTIONS: "-Djava.io.tmpdir=${{ runner.temp }}"
-        run: |
-          java -Xmx500m -jar rascal/rascal.jar Main \
-            --libs "${{ inputs.dependencies_on_lib_path }}" \
-            --maxCores 4
+            --maxCores 4 \
             --memory 14G \
-            --rascalVersion "|cwd:///rascal/rascal.jar|" \
+            --rascalVersion "|file:///${{ runner.temp }}/rascal.jar|" \
             --repoFolder "|cwd:///repos|" \
             --full false \
             --clean \
-             --tests 'rascal-all' 'rascal-lsp-all'
+             --tests ${{ matrix.target }}
