@@ -12,6 +12,9 @@ on:
         required: true
         default: 'true'
 
+env:
+  MAVEN_OPTS: "-Xmx4G -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn -Dorg.slf4j.simpleLogger.showDateTime=true -Djava.awt.headless=true"
+  IS_OWN_PR: "${{ secrets.MAVEN_MIRROR_URL }}"
 
 jobs:
   integration-test:
@@ -29,6 +32,13 @@ jobs:
           repository: 'usethesource/rascal'
           ref: ${{ inputs.rascal_version }}
           path: 'deps/rascal'
+
+      - uses: s4u/maven-settings-action@v3.1.0
+        if: ${{ env.IS_OWN_PR != '' }}
+        with:
+          servers: '[{"id": "usethesource-gh", "username":"github", "password": "${{ secrets.MAVEN_MIRROR_PASSWORD }}"}]'
+          mirrors: '[{"id": "usethesource-gh", "name": "uts mirror", "mirrorOf": "usethesource", "url": "${{ secrets.MAVEN_MIRROR_URL }}"}]'
+
       - uses: actions/setup-java@v4
         with:
           java-version: 11
@@ -51,7 +61,7 @@ jobs:
         env:
           JAVA_TOOL_OPTIONS: "-Djava.io.tmpdir=${{ runner.temp }}"
         run: |
-          java -Xmx500m -jar ${{ runner.temp }}/rascal.jar/rascal.jar Main \
+          java -Xmx500m -jar ${{ runner.temp }}/rascal.jar Main \
             --libs "${{ inputs.dependencies_on_lib_path }}" \
             --maxCores 4 \
             --memory 14G \
