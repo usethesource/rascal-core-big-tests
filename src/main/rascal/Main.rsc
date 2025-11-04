@@ -223,7 +223,6 @@ int main(
         runner = createProcess("java", args=[
             "-Xmx<memory>",
             "-Drascal.monitor.batch", // disable fancy progress bar
-            "-Drascal.compilerClasspath=<buildFSPath(rascalVersion)>",
             "-cp", buildFSPath(rascalVersion),
             "org.rascalmpl.shell.RascalCompile",
             *addParallalFlags(proj, p, rascalFiles, maxCores),
@@ -249,7 +248,7 @@ int main(
             println(readEntireErrStream(runner));
             code = exitCode(runner);
             result += code;
-            println("*** Finished: <n> < code == 0 ? "✅" : "❌ Failed"> (<(stopTime - startTime)/1000>s)");
+            println("*** Finished: <n> < code == 0 ? "✅" : "❌ Failed with error <code>"> (<(stopTime - startTime)/1000>s)");
             stats += <n, code, (stopTime - startTime)/1000>;
         }
         catch ex :{
