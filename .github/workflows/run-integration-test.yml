@@ -64,7 +64,7 @@ jobs:
           java -DRASCAL_ALL_BRANCH="${{ inputs.rascal_version }}" -Xmx500m -jar ${{ runner.temp }}/rascal.jar Main \
             --libs "${{ inputs.dependencies_on_lib_path }}" \
             --maxCores 4 \
-            --memory 12G \
+            --memory 10G \
             --rascalVersion "|file:///${{ runner.temp }}/rascal.jar|" \
             --repoFolder "|cwd:///repos|" \
             --full false \
