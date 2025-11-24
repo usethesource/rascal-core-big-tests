@@ -226,6 +226,7 @@ int main(
             "-cp", buildFSPath(rascalVersion),
             "org.rascalmpl.shell.RascalCompile",
             *addParallalFlags(proj, p, rascalFiles, maxCores),
+            "-projectRoot", rProjectRoot,
             "-srcs", *[ "<s>" | s <- p.srcs],
             *["-libs" | p.libs != []], *[ "<l>" | l <- p.libs],
             "-bin", "<p.bin>",
