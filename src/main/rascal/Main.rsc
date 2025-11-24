@@ -141,7 +141,7 @@ int updateRepos(Projects projs, loc repoFolder, bool full) {
 bool isIgnored(loc f, list[loc] ignores)
     = size(ignores) > 0 && any(i <- ignores, (relativize(i, f) != f || i == f));
 
-list[str] addParallalFlags(Project proj, PathConfig pcfg, list[loc] rascalFiles, int maxCores) {
+list[str] addParallelFlags(Project proj, PathConfig pcfg, list[loc] rascalFiles, int maxCores) {
     if (!proj.parallel) {
         return [];
     }
@@ -225,7 +225,7 @@ int main(
             "-Drascal.monitor.batch", // disable fancy progress bar
             "-cp", buildFSPath(rascalVersion),
             "org.rascalmpl.shell.RascalCompile",
-            *addParallalFlags(proj, p, rascalFiles, maxCores),
+            *addParallelFlags(proj, p, rascalFiles, maxCores),
             "-projectRoot", rProjectRoot,
             "-srcs", *[ "<s>" | s <- p.srcs],
             *["-libs" | p.libs != []], *[ "<l>" | l <- p.libs],
