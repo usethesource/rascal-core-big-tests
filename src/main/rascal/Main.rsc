@@ -35,6 +35,7 @@ Projects projects = {
     <"salix-core", project(|https://github.com/usethesource/salix-core.git|, {"rascal"})>,
     <"clair", project(|https://github.com/usethesource/clair.git|, {"rascal"})>,
     <"java-air", project(|https://github.com/usethesource/java-air.git|, {"rascal"})>,
+    <"rascal-lucene", project(|https://github.com/usethesource/rascal-lucene.git|, {"rascal"})>,
     <"python-air", project(|https://github.com/cwi-swat/python-air.git|, {"rascal"})>,
     <"salix-contrib", project(|https://github.com/usethesource/salix-contrib.git|, {"rascal", "salix-core"})>,
     <"flybytes", project(|https://github.com/usethesource/flybytes.git|, {"rascal"})>,
