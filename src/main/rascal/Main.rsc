@@ -30,7 +30,7 @@ alias Projects = rel[str name, Project config];
 Projects projects = {
     <"rascal", project(|https://github.com/usethesource/rascal.git|, {}, srcs = ["src/org/rascalmpl/library"], ignores={"experiments", "resource", "lang/rascal/tests", "lang/rascal/syntax/test"}, parallel = true, parallelPreCheck = {"src/org/rascalmpl/library/Prelude.rsc"})>,
     <"rascal-all", project(|https://github.com/usethesource/rascal.git|, {}, branch=(getSystemProperties()["RASCAL_ALL_BRANCH"] ? "main"), ignores={"lang/rascal/tutor/examples", "NestedOr.rsc"}, parallel = true, parallelPreCheck = {"src/org/rascalmpl/library/Prelude.rsc", "src/org/rascalmpl/compiler/lang/rascalcore/check/CheckerCommon.rsc"})>,
-    <"typepal", project(|https://github.com/usethesource/typepal.git|, {"rascal"}, ignores={"examples"})>,
+    <"typepal", project(|https://github.com/usethesource/typepal.git|, {"rascal"}, branch="fix/useViaType", ignores={"examples"})>,
     <"typepal-boot", project(|https://github.com/usethesource/typepal.git|, {}, rascalLib=true, ignores={"examples"})>,
     <"salix-core", project(|https://github.com/usethesource/salix-core.git|, {"rascal"})>,
     <"clair", project(|https://github.com/usethesource/clair.git|, {"rascal"})>,
