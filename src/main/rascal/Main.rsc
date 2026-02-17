@@ -67,9 +67,6 @@ str buildFSPath(loc l) {
 str buildCP(loc entries...) = intercalate(getSystemProperty("path.separator"), [ buildFSPath(l) | l <- entries]);
 
 
-
-loc tplPath(loc repoFolder, str name) = (repoFolder + name) + "target/classes";
-
 loc projectRoot(loc repoFolder, str name, Project proj) = (repoFolder + name) + proj.subdir;
 
 
@@ -79,7 +76,7 @@ tuple[list[loc], list[loc]] calcSourcePaths(str name, Project proj, loc repoFold
     return <srcs, ignores>;
 }
 
-PathConfig generatePathConfig(str name, Project proj, loc repoFolder, false) {
+PathConfig generatePathConfig(str name, Project proj, loc repoFolder, false, false, loc _packageTarget) {
     <srcs, ignores> = calcSourcePaths(name, proj, repoFolder);
     for (str dep <- proj.dependencies, <dep, projDep> <- projects) {
         <nestedSrcs, nestedIgnores> = calcSourcePaths(dep, projDep, repoFolder);
@@ -94,14 +91,14 @@ PathConfig generatePathConfig(str name, Project proj, loc repoFolder, false) {
         libs = [repoFolder + "shared-tpls"] + (proj.rascalLib ? [|std:///|] : [])
     );
 }
-PathConfig generatePathConfig(str name, Project proj, loc repoFolder, true) {
+PathConfig generatePathConfig(str name, Project proj, loc repoFolder, true, bool package, loc packageTarget) {
     <srcs, ignores> = calcSourcePaths(name, proj, repoFolder);
     result = pathConfig(
         projectRoot = projectRoot(repoFolder, name, proj),
         srcs = srcs,
         ignores = ignores,
-        bin = tplPath(repoFolder, name),
-        libs = [ tplPath(repoFolder, dep) | dep <- proj.dependencies ] + (proj.rascalLib ? [|std:///|] : [])
+        bin = repoFolder + name + "target" + "classes",
+        libs = [ resolve(repoFolder + dep, package ? packageTarget : |relative:///target/classes|) | dep <- proj.dependencies ] + (proj.rascalLib ? [|std:///|] : [])
     );
     /*
     if (name == "rascal-lsp-all" || name == "rascal-all") {
@@ -161,7 +158,8 @@ int main(
     int maxCores = 4,
     bool libs=true, // put the tpls of dependencies on the lib path
     bool update=false, // update all projects from remote
-    bool package=true,
+    bool package=libs,
+    loc packageTarget = |relative:///target/rewrittenClasses|,
     bool full=true, // do a full clone
     bool clean=true, // do a clean of the to build folders
     loc repoFolder = |tmp:///repo/|,
@@ -195,7 +193,7 @@ int main(
 
     // prepare path configs
     println("*** Calculating class paths");
-    pcfgs = [<n, generatePathConfig(n, proj, repoFolder, libs)> | n <- buildOrder, proj <- toBuild[n]];
+    pcfgs = [<n, generatePathConfig(n, proj, repoFolder, libs, package, packageTarget)> | n <- buildOrder, proj <- toBuild[n]];
 
 
     if (clean) {
@@ -212,7 +210,7 @@ int main(
 
     for (n <- buildOrder, proj <- toBuild[n]) {
         println("*** Preparing: <n>");
-        p = generatePathConfig(n, proj, repoFolder, libs);
+        p = generatePathConfig(n, proj, repoFolder, libs, package, packageTarget);
         if (clean) {
             for (f <- find(p.bin, "tpl")) {
                 remove(f);
@@ -226,7 +224,7 @@ int main(
 
         result += run("org.rascalmpl.shell.RascalCompile", n, rProjectRoot, p, rascalFiles, memory, rascalVersion, stats, extraArgs = [*addParallelFlags(proj, p, rascalFiles, maxCores), "-modules", *[ "<f>" | f <- rascalFiles]]);
         if (package) {
-            result += run("org.rascalmpl.shell.RascalPackage", n, rProjectRoot, p, rascalFiles, memory, rascalVersion, stats, extraArgs = ["-sourceLookup", "<rascalVersion>"]);
+            result += run("org.rascalmpl.shell.RascalPackage", n, rProjectRoot, p, rascalFiles, memory, rascalVersion, stats, extraArgs = ["-sourceLookup", "<rascalVersion>", "-relocatedClasses", "<resolve(rProjectRoot, packageTarget)>"]);
         }
     }
     println("******\nDone running ");
