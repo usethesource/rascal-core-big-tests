@@ -222,51 +222,67 @@ int main(
         rProjectRoot = resolveLocation(projectRoot);
         rascalFiles = [*find(s, "rsc") | s <- p.srcs, (startsWith(s.path, projectRoot.path) || startsWith(s.path, rProjectRoot.path))];
         rascalFiles = sort([f | f <- rascalFiles, !isIgnored(f, p.ignores)]);
-        println("*** Starting: <n> (<size(rascalFiles)> to check)");
-        startTime = realTime();
-        runner = createProcess("java", args=[
-            "-Xmx<memory>",
-            "-Drascal.monitor.batch", // disable fancy progress bar
-            "-cp", buildFSPath(rascalVersion),
-            "org.rascalmpl.shell.RascalCompile",
-            *addParallelFlags(proj, p, rascalFiles, maxCores),
-            "-projectRoot", "<rProjectRoot>",
-            "-srcs", *[ "<s>" | s <- p.srcs],
-            *["-libs" | p.libs != []], *[ "<l>" | l <- p.libs],
-            "-bin", "<p.bin>",
-            "-modules", *[ "<f>" | f <- rascalFiles]
-        ]);
-        try {
-            while (isAlive(runner)) {
-                stdOut = readWithWait(runner, 500);
-                if (stdOut != "") {
-                    print(stdOut);
-                }
-                stdErr = readFromErr(runner);
-                while (stdErr != "") {
-                    println(stdErr);
-                    stdErr = readFromErr(runner);
-                }
-            }
-            stopTime = realTime();
-            println(readEntireStream(runner));
-            println(readEntireErrStream(runner));
-            code = exitCode(runner);
-            result += code;
-            println("*** Finished: <n> < code == 0 ? "✅" : "❌ Failed with error <code>"> (<(stopTime - startTime)/1000>s)");
-            stats += <n, code, (stopTime - startTime)/1000>;
-        }
-        catch ex :{
-            println("Running the runner for <n> crashed with <ex>");
-            result += 1;
-        }
-        finally {
-            killProcess(runner);
-        }
+
+        result += run("org.rascalmpl.shell.RascalCompile", n, rProjectRoot, p, rascalFiles, memory, rascalVersion, stats, extraArgs = [*addParallelFlags(proj, p, rascalFiles, maxCores), "-modules", *[ "<f>" | f <- rascalFiles]]);
     }
     println("******\nDone running ");
     for (<n, e, t> <- stats) {
         println("- <n> <e == 0 ? "✅" : "❌"> <t>s");
+    }
+    return result;
+}
+
+int run(
+    str class,
+    str n,
+    loc rProjectRoot,
+    PathConfig p,
+    list[loc] rascalFiles,
+    str memory,
+    loc rascalVersion,
+    lrel[str, int, int] stats,
+    list[str] extraArgs = []
+) {
+    result = 0;
+    println("*** Starting: <class> on <n> (<size(rascalFiles)>)");
+    startTime = realTime();
+    runner = createProcess("java", args=[
+        "-Xmx<memory>",
+        "-Drascal.monitor.batch", // disable fancy progress bar
+        "-cp", buildFSPath(rascalVersion),
+        class,
+        "-projectRoot", "<rProjectRoot>",
+        "-srcs", *[ "<s>" | s <- p.srcs],
+        *["-libs" | p.libs != []], *[ "<l>" | l <- p.libs],
+        "-bin", "<p.bin>",
+        *extraArgs
+    ]);
+    try {
+        while (isAlive(runner)) {
+            stdOut = readWithWait(runner, 500);
+            if (stdOut != "") {
+                print(stdOut);
+            }
+            stdErr = readFromErr(runner);
+            while (stdErr != "") {
+                println(stdErr);
+                stdErr = readFromErr(runner);
+            }
+        }
+        stopTime = realTime();
+        println(readEntireStream(runner));
+        println(readEntireErrStream(runner));
+        code = exitCode(runner);
+        result += code;
+        println("*** Finished: <n> < code == 0 ? "✅" : "❌ Failed with error <code>"> (<(stopTime - startTime)/1000>s)");
+        stats += <n, code, (stopTime - startTime)/1000>;
+    }
+    catch ex :{
+        println("Running the runner for <n> crashed with <ex>");
+        result += 1;
+    }
+    finally {
+        killProcess(runner);
     }
     return result;
 }
