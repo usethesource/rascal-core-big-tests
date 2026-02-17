@@ -161,6 +161,7 @@ int main(
     int maxCores = 4,
     bool libs=true, // put the tpls of dependencies on the lib path
     bool update=false, // update all projects from remote
+    bool package=true,
     bool full=true, // do a full clone
     bool clean=true, // do a clean of the to build folders
     loc repoFolder = |tmp:///repo/|,
@@ -224,6 +225,9 @@ int main(
         rascalFiles = sort([f | f <- rascalFiles, !isIgnored(f, p.ignores)]);
 
         result += run("org.rascalmpl.shell.RascalCompile", n, rProjectRoot, p, rascalFiles, memory, rascalVersion, stats, extraArgs = [*addParallelFlags(proj, p, rascalFiles, maxCores), "-modules", *[ "<f>" | f <- rascalFiles]]);
+        if (package) {
+            result += run("org.rascalmpl.shell.RascalPackage", n, rProjectRoot, p, rascalFiles, memory, rascalVersion, stats, extraArgs = ["-sourceLookup", "<rascalVersion>"]);
+        }
     }
     println("******\nDone running ");
     for (<n, e, t> <- stats) {
