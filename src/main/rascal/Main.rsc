@@ -236,9 +236,9 @@ int main(
 
 int run(
     str class,
-    str n,
-    loc rProjectRoot,
-    PathConfig p,
+    str projectName,
+    loc resolvedRoot,
+    PathConfig pcfg,
     list[loc] rascalFiles,
     str memory,
     loc rascalVersion,
@@ -246,17 +246,17 @@ int run(
     list[str] extraArgs = []
 ) {
     result = 0;
-    println("*** Starting: <class> on <n> (<size(rascalFiles)>)");
+    println("*** Starting: <class> on <projectName> (<size(rascalFiles)>)");
     startTime = realTime();
     runner = createProcess("java", args=[
         "-Xmx<memory>",
         "-Drascal.monitor.batch", // disable fancy progress bar
         "-cp", buildFSPath(rascalVersion),
         class,
-        "-projectRoot", "<rProjectRoot>",
-        "-srcs", *[ "<s>" | s <- p.srcs],
-        *["-libs" | p.libs != []], *[ "<l>" | l <- p.libs],
-        "-bin", "<p.bin>",
+        "-projectRoot", "<resolvedRoot>",
+        "-srcs", *[ "<s>" | s <- pcfg.srcs],
+        *["-libs" | pcfg.libs != []], *[ "<l>" | l <- pcfg.libs],
+        "-bin", "<pcfg.bin>",
         *extraArgs
     ]);
     try {
@@ -276,11 +276,11 @@ int run(
         println(readEntireErrStream(runner));
         code = exitCode(runner);
         result += code;
-        println("*** Finished: <class> on <n> < code == 0 ? "✅" : "❌ Failed with error <code>"> (<(stopTime - startTime)/1000>s)");
-        stats += <n, code, (stopTime - startTime)/1000>;
+        println("*** Finished: <class> on <projectName> < code == 0 ? "✅" : "❌ Failed with error <code>"> (<(stopTime - startTime)/1000>s)");
+        stats += <projectName, code, (stopTime - startTime)/1000>;
     }
     catch ex :{
-        println("Running the runner for <n> crashed with <ex>");
+        println("Running the runner for <projectName> crashed with <ex>");
         result += 1;
     }
     finally {
