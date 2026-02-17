@@ -142,7 +142,7 @@ int updateRepos(Projects projs, loc repoFolder, bool full) {
 bool isIgnored(loc f, list[loc] ignores)
     = size(ignores) > 0 && any(i <- ignores, (relativize(i, f) != f || i == f));
 
-list[str] addParallelFlags(Project proj, PathConfig pcfg, list[loc] rascalFiles, int maxCores) {
+list[str] addParallelFlags(Project proj, list[loc] rascalFiles, int maxCores) {
     if (!proj.parallel) {
         return [];
     }
@@ -222,7 +222,7 @@ int main(
         rascalFiles = [*find(s, "rsc") | s <- p.srcs, (startsWith(s.path, projectRoot.path) || startsWith(s.path, rProjectRoot.path))];
         rascalFiles = sort([f | f <- rascalFiles, !isIgnored(f, p.ignores)]);
 
-        result += run("org.rascalmpl.shell.RascalCompile", n, rProjectRoot, p, rascalFiles, memory, rascalVersion, stats, extraArgs = [*addParallelFlags(proj, p, rascalFiles, maxCores), "-modules", *[ "<f>" | f <- rascalFiles]]);
+        result += run("org.rascalmpl.shell.RascalCompile", n, rProjectRoot, p, rascalFiles, memory, rascalVersion, stats, extraArgs = [*addParallelFlags(proj, rascalFiles, maxCores), "-modules", *[ "<f>" | f <- rascalFiles]]);
         if (package) {
             result += run("org.rascalmpl.shell.RascalPackage", n, rProjectRoot, p, rascalFiles, memory, rascalVersion, stats, extraArgs = ["-sourceLookup", "<rascalVersion>", "-relocatedClasses", "<resolve(rProjectRoot, packageTarget)>"]);
         }
