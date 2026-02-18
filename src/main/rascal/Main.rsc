@@ -67,9 +67,6 @@ str buildFSPath(loc l) {
 str buildCP(loc entries...) = intercalate(getSystemProperty("path.separator"), [ buildFSPath(l) | l <- entries]);
 
 
-
-loc tplPath(loc repoFolder, str name) = (repoFolder + name) + "target/classes";
-
 loc projectRoot(loc repoFolder, str name, Project proj) = (repoFolder + name) + proj.subdir;
 
 
@@ -79,7 +76,7 @@ tuple[list[loc], list[loc]] calcSourcePaths(str name, Project proj, loc repoFold
     return <srcs, ignores>;
 }
 
-PathConfig generatePathConfig(str name, Project proj, loc repoFolder, false) {
+PathConfig generatePathConfig(str name, Project proj, loc repoFolder, false, false, loc _packageTarget) {
     <srcs, ignores> = calcSourcePaths(name, proj, repoFolder);
     for (str dep <- proj.dependencies, <dep, projDep> <- projects) {
         <nestedSrcs, nestedIgnores> = calcSourcePaths(dep, projDep, repoFolder);
@@ -94,14 +91,14 @@ PathConfig generatePathConfig(str name, Project proj, loc repoFolder, false) {
         libs = [repoFolder + "shared-tpls"] + (proj.rascalLib ? [|std:///|] : [])
     );
 }
-PathConfig generatePathConfig(str name, Project proj, loc repoFolder, true) {
+PathConfig generatePathConfig(str name, Project proj, loc repoFolder, true, bool package, loc packageTarget) {
     <srcs, ignores> = calcSourcePaths(name, proj, repoFolder);
     result = pathConfig(
         projectRoot = projectRoot(repoFolder, name, proj),
         srcs = srcs,
         ignores = ignores,
-        bin = tplPath(repoFolder, name),
-        libs = [ tplPath(repoFolder, dep) | dep <- proj.dependencies ] + (proj.rascalLib ? [|std:///|] : [])
+        bin = repoFolder + name + "target" + "classes",
+        libs = [ resolve(repoFolder + dep, package ? packageTarget : |relative:///target/classes|) | dep <- proj.dependencies ] + (proj.rascalLib ? [|std:///|] : [])
     );
     /*
     if (name == "rascal-lsp-all" || name == "rascal-all") {
@@ -145,7 +142,7 @@ int updateRepos(Projects projs, loc repoFolder, bool full) {
 bool isIgnored(loc f, list[loc] ignores)
     = size(ignores) > 0 && any(i <- ignores, (relativize(i, f) != f || i == f));
 
-list[str] addParallelFlags(Project proj, PathConfig pcfg, list[loc] rascalFiles, int maxCores) {
+list[str] addParallelFlags(Project proj, list[loc] rascalFiles, int maxCores) {
     if (!proj.parallel) {
         return [];
     }
@@ -161,6 +158,8 @@ int main(
     int maxCores = 4,
     bool libs=true, // put the tpls of dependencies on the lib path
     bool update=false, // update all projects from remote
+    bool package=libs,
+    loc packageTarget = |relative:///target/rewrittenClasses|,
     bool full=true, // do a full clone
     bool clean=true, // do a clean of the to build folders
     loc repoFolder = |tmp:///repo/|,
@@ -194,7 +193,7 @@ int main(
 
     // prepare path configs
     println("*** Calculating class paths");
-    pcfgs = [<n, generatePathConfig(n, proj, repoFolder, libs)> | n <- buildOrder, proj <- toBuild[n]];
+    pcfgs = [<n, generatePathConfig(n, proj, repoFolder, libs, package, packageTarget)> | n <- buildOrder, proj <- toBuild[n]];
 
 
     if (clean) {
@@ -211,7 +210,7 @@ int main(
 
     for (n <- buildOrder, proj <- toBuild[n]) {
         println("*** Preparing: <n>");
-        p = generatePathConfig(n, proj, repoFolder, libs);
+        p = generatePathConfig(n, proj, repoFolder, libs, package, packageTarget);
         if (clean) {
             for (f <- find(p.bin, "tpl")) {
                 remove(f);
@@ -222,51 +221,70 @@ int main(
         rProjectRoot = resolveLocation(projectRoot);
         rascalFiles = [*find(s, "rsc") | s <- p.srcs, (startsWith(s.path, projectRoot.path) || startsWith(s.path, rProjectRoot.path))];
         rascalFiles = sort([f | f <- rascalFiles, !isIgnored(f, p.ignores)]);
-        println("*** Starting: <n> (<size(rascalFiles)> to check)");
-        startTime = realTime();
-        runner = createProcess("java", args=[
-            "-Xmx<memory>",
-            "-Drascal.monitor.batch", // disable fancy progress bar
-            "-cp", buildFSPath(rascalVersion),
-            "org.rascalmpl.shell.RascalCompile",
-            *addParallelFlags(proj, p, rascalFiles, maxCores),
-            "-projectRoot", "<rProjectRoot>",
-            "-srcs", *[ "<s>" | s <- p.srcs],
-            *["-libs" | p.libs != []], *[ "<l>" | l <- p.libs],
-            "-bin", "<p.bin>",
-            "-modules", *[ "<f>" | f <- rascalFiles]
-        ]);
-        try {
-            while (isAlive(runner)) {
-                stdOut = readWithWait(runner, 500);
-                if (stdOut != "") {
-                    print(stdOut);
-                }
-                stdErr = readFromErr(runner);
-                while (stdErr != "") {
-                    println(stdErr);
-                    stdErr = readFromErr(runner);
-                }
-            }
-            stopTime = realTime();
-            println(readEntireStream(runner));
-            println(readEntireErrStream(runner));
-            code = exitCode(runner);
-            result += code;
-            println("*** Finished: <n> < code == 0 ? "✅" : "❌ Failed with error <code>"> (<(stopTime - startTime)/1000>s)");
-            stats += <n, code, (stopTime - startTime)/1000>;
-        }
-        catch ex :{
-            println("Running the runner for <n> crashed with <ex>");
-            result += 1;
-        }
-        finally {
-            killProcess(runner);
+
+        result += run("org.rascalmpl.shell.RascalCompile", n, rProjectRoot, p, rascalFiles, memory, rascalVersion, stats, extraArgs = [*addParallelFlags(proj, rascalFiles, maxCores), "-modules", *[ "<f>" | f <- rascalFiles]]);
+        if (package) {
+            result += run("org.rascalmpl.shell.RascalPackage", n, rProjectRoot, p, rascalFiles, memory, rascalVersion, stats, extraArgs = ["-sourceLookup", "<rascalVersion>", "-relocatedClasses", "<resolve(rProjectRoot, packageTarget)>"]);
         }
     }
     println("******\nDone running ");
     for (<n, e, t> <- stats) {
         println("- <n> <e == 0 ? "✅" : "❌"> <t>s");
+    }
+    return result;
+}
+
+int run(
+    str class,
+    str projectName,
+    loc resolvedRoot,
+    PathConfig pcfg,
+    list[loc] rascalFiles,
+    str memory,
+    loc rascalVersion,
+    lrel[str, int, int] stats,
+    list[str] extraArgs = []
+) {
+    result = 0;
+    println("*** Starting: <class> on <projectName> (<size(rascalFiles)>)");
+    startTime = realTime();
+    runner = createProcess("java", args=[
+        "-Xmx<memory>",
+        "-Drascal.monitor.batch", // disable fancy progress bar
+        "-cp", buildFSPath(rascalVersion),
+        class,
+        "-projectRoot", "<resolvedRoot>",
+        "-srcs", *[ "<s>" | s <- pcfg.srcs],
+        *["-libs" | pcfg.libs != []], *[ "<l>" | l <- pcfg.libs],
+        "-bin", "<pcfg.bin>",
+        *extraArgs
+    ]);
+    try {
+        while (isAlive(runner)) {
+            stdOut = readWithWait(runner, 500);
+            if (stdOut != "") {
+                print(stdOut);
+            }
+            stdErr = readFromErr(runner);
+            while (stdErr != "") {
+                println(stdErr);
+                stdErr = readFromErr(runner);
+            }
+        }
+        stopTime = realTime();
+        println(readEntireStream(runner));
+        println(readEntireErrStream(runner));
+        code = exitCode(runner);
+        result += code;
+        println("*** Finished: <class> on <projectName> < code == 0 ? "✅" : "❌ Failed with error <code>"> (<(stopTime - startTime)/1000>s)");
+        stats += <projectName, code, (stopTime - startTime)/1000>;
+    }
+    catch ex :{
+        println("Running the runner for <projectName> crashed with <ex>");
+        result += 1;
+    }
+    finally {
+        killProcess(runner);
     }
     return result;
 }
