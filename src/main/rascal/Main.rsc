@@ -22,8 +22,7 @@ data Project
         list[str] srcs = [], // override source calculation
         set[str] ignores = {}, // directories to ignore
         bool parallel = false,
-        set[str] parallelPreCheck = {},
-        bool runTests=false
+        set[str] parallelPreCheck = {}
     );
 
 alias Projects = rel[str name, Project config];
