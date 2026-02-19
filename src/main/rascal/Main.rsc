@@ -73,15 +73,10 @@ loc projectRoot(loc repoFolder, str name, Project proj) = (repoFolder + name) + 
 tuple[list[loc], list[loc]] calcSourcePaths(str name, Project proj, loc repoFolder, loc(str) getProjectLoc) {
     srcs = proj.srcs != [] ? [projectRoot(repoFolder, name, proj) + s |  s <- proj.srcs ] : getProjectPathConfig(projectRoot(repoFolder, name, proj)).srcs;
     if (name == "rascal-all") {
-        // To be able to access typepal in rascal-all (and rascal-lsp-all) without bootstrapping issues, we copy typepal's sources and put them on our src path
-        tpSources = resolve(repoFolder, |relative:///rascal-all/src/org/rascalmpl/typepal|);
-        copy(
-            resolve(getProjectLoc("typepal"), |relative:///src/analysis/typepal|),
-            resolve(tpSources, |relative:///analysis/typepal|),
-            recursive=true
-        );
-        srcs = [src | src <- srcs, !(src.scheme == "mvn" && startsWith(src.authority, "org.rascalmpl--typepal"))];
-        srcs += resolveLocation(tpSources);
+        // To be able to access typepal in rascal-all (and rascal-lsp-all) without bootstrapping issues, we copy typepal sources and put them on our src path
+        tpSources = repoFolder + "rascal-all/src/org/rascalmpl/typepal";
+        copy(getProjectLoc("typepal") + "src/analysis/typepal", tpSources + "analysis/typepal", recursive=true);
+        srcs = [src | src <- srcs, !(src.scheme == "mvn" && startsWith(src.authority, "org.rascalmpl--typepal"))] + resolveLocation(tpSources);
     }
     ignores = [ s + i |  s <- srcs, s.scheme != "jar+file",  i <- proj.ignores];
     return <srcs, ignores>;
