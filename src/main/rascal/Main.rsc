@@ -22,7 +22,8 @@ data Project
         list[str] srcs = [], // override source calculation
         set[str] ignores = {}, // directories to ignore
         bool parallel = false,
-        set[str] parallelPreCheck = {}
+        set[str] parallelPreCheck = {},
+        set[str] testPrefixes={}
     );
 
 alias Projects = rel[str name, Project config];
@@ -43,7 +44,7 @@ Projects projects = {
     <"rascal-git", project(|https://github.com/cwi-swat/rascal-git.git|, {"rascal"})>,
     <"php-analysis", project(|https://github.com/cwi-swat/php-analysis.git|, {"rascal", "rascal-git"}, srcs=["src/main/rascal"])>,
     <"rascal-lsp-all", project(|https://github.com/usethesource/rascal-language-servers.git|, {"rascal-all"}, subdir="rascal-lsp", srcs=["src/main/rascal/library","src/main/rascal/lsp"])>,
-    <"rascal-lsp", project(|https://github.com/usethesource/rascal-language-servers.git|, {"rascal", "typepal"}, srcs=["src/main/rascal/library"], subdir="rascal-lsp")>
+    <"rascal-lsp", project(|https://github.com/usethesource/rascal-language-servers.git|, {"rascal", "typepal"}, srcs=["src/main/rascal/library", "src/main/rascal/lsp"], ignores = {"src/main/rascal/lsp"}, subdir="rascal-lsp", testPrefixes={"lang::rascal::tests::rename"})>
 };
 
 bool isWindows = /win/i := getSystemProperty("os.name");
@@ -159,6 +160,9 @@ list[str] addParallelFlags(Project proj, list[loc] rascalFiles, int maxCores) {
     return result;
 }
 
+// Resolve this location before our working directory is irrepairably changed later on
+loc testWrapperLocation = resolveLocation(|cwd:///src/main/rascal/TestWrapper.rsc|);
+
 int main(
     str memory = "4G",
     int maxCores = 4,
@@ -234,12 +238,14 @@ int main(
         iprintln(p);
         loc projectRoot = repoFolder + n;
         rProjectRoot = resolveLocation(projectRoot);
-        rascalFiles = [*find(s, "rsc") | s <- p.srcs, (startsWith(s.path, projectRoot.path) || startsWith(s.path, rProjectRoot.path))];
-        rascalFiles = sort([f | f <- rascalFiles, !isIgnored(f, p.ignores)]);
+        rascalFiles = sort([*find(s, "rsc") | s <- p.srcs, (startsWith(s.path, projectRoot.path) || startsWith(s.path, rProjectRoot.path))]);
+        sourceFiles = [f | f <- rascalFiles, !isIgnored(f, p.ignores)];
+        testModules = sort([mname | f <- rascalFiles, str mname := getModuleName(f, p), any(pref <- proj.testPrefixes, startsWith(mname, pref))]);
 
-        result += run("org.rascalmpl.shell.RascalCompile", n, rProjectRoot, p, rascalFiles, memory, rascalVersion, stats, extraArgs = [*addParallelFlags(proj, rascalFiles, maxCores), "-modules", *[ "<f>" | f <- rascalFiles]]);
+        result += runTests(testModules, rascalVersion, repoFolder, n, proj, p);
+        result += run("org.rascalmpl.shell.RascalCompile", n, rProjectRoot, p, sourceFiles, memory, rascalVersion, stats, extraArgs = [*addParallelFlags(proj, sourceFiles, maxCores), "-modules", *[ "<f>" | f <- sourceFiles]]);
         if (package) {
-            result += run("org.rascalmpl.shell.RascalPackage", n, rProjectRoot, p, rascalFiles, memory, rascalVersion, stats, extraArgs = ["-sourceLookup", "<rascalVersion>", "-relocatedClasses", "<resolve(rProjectRoot, packageTarget)>"]);
+            result += run("org.rascalmpl.shell.RascalPackage", n, rProjectRoot, p, sourceFiles, memory, rascalVersion, stats, extraArgs = ["-sourceLookup", "<rascalVersion>", "-relocatedClasses", "<resolve(rProjectRoot, packageTarget)>"]);
         }
     }
     println("******\nDone running ");
@@ -247,6 +253,20 @@ int main(
         println("- <n> <e == 0 ? "✅" : "❌"> <t>s");
     }
     return result;
+}
+
+int runTests(list[str] testModules, loc rascalVersion, loc repoFolder, str projectName, Project proj, PathConfig pcfg) {
+    if ({} !:= proj.testPrefixes) {
+        testWrapperDest = getFirstFrom(pcfg.srcs) + "TestWrapper.rsc";
+        copy(testWrapperLocation, testWrapperDest, overwrite=true);
+        <out, code> = execWithCode("java", args = ["-jar", buildFSPath(rascalVersion), "TestWrapper", "--projectName", projectName, "--testModules", intercalate(" ", testModules)], workingDir = repoFolder + projectName + proj.subdir);
+        remove(testWrapperDest);
+        if (code != 0) {
+            println(out);
+        }
+        return code;
+    }
+    return 0;
 }
 
 int run(
