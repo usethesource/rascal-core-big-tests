@@ -44,7 +44,7 @@ Projects projects = {
     <"rascal-git", project(|https://github.com/cwi-swat/rascal-git.git|, {"rascal"})>,
     <"php-analysis", project(|https://github.com/cwi-swat/php-analysis.git|, {"rascal", "rascal-git"}, srcs=["src/main/rascal"])>,
     <"rascal-lsp-all", project(|https://github.com/usethesource/rascal-language-servers.git|, {"rascal-all"}, subdir="rascal-lsp", srcs=["src/main/rascal/library","src/main/rascal/lsp"])>,
-    <"rascal-lsp", project(|https://github.com/usethesource/rascal-language-servers.git|, {"rascal", "typepal"}, srcs=["src/main/rascal/library", "src/main/rascal/lsp"], ignores = {"src/main/rascal/lsp"}, subdir="rascal-lsp", testPrefixes={"lang::rascal::tests::rename"})>
+    <"rascal-lsp", project(|https://github.com/usethesource/rascal-language-servers.git|, {"rascal", "typepal"}, srcs=["src/main/rascal/library", "src/main/rascal/lsp"], ignores = {"lang/rascal/lsp/refactor", "lang/rascal/tests/rename"}, subdir="rascal-lsp", testPrefixes={"lang::rascal::tests::rename"})>
 };
 
 bool isWindows = /win/i := getSystemProperty("os.name");
@@ -242,11 +242,11 @@ int main(
         sourceFiles = [f | f <- rascalFiles, !isIgnored(f, p.ignores)];
         testModules = sort([mname | f <- rascalFiles, str mname := getModuleName(f, p), any(pref <- proj.testPrefixes, startsWith(mname, pref))]);
 
-        result += runTests(testModules, rascalVersion, repoFolder, n, proj, p);
         result += run("org.rascalmpl.shell.RascalCompile", n, rProjectRoot, p, sourceFiles, memory, rascalVersion, stats, extraArgs = [*addParallelFlags(proj, sourceFiles, maxCores), "-modules", *[ "<f>" | f <- sourceFiles]]);
         if (package) {
             result += run("org.rascalmpl.shell.RascalPackage", n, rProjectRoot, p, sourceFiles, memory, rascalVersion, stats, extraArgs = ["-sourceLookup", "<rascalVersion>", "-relocatedClasses", "<resolve(rProjectRoot, packageTarget)>"]);
         }
+        result += runTests(testModules, rascalVersion, repoFolder, n, proj, p);
     }
     println("******\nDone running ");
     for (<n, e, t> <- stats) {
