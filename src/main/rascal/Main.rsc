@@ -159,6 +159,8 @@ list[str] addParallelFlags(Project proj, list[loc] rascalFiles, int maxCores) {
     return result;
 }
 
+lrel[str, int, int] stats = [];
+
 int main(
     str memory = "4G",
     int maxCores = 4,
@@ -181,6 +183,7 @@ int main(
         return repoFolder + projectName;
     }
 
+    stats = [];
     mkDirectory(repoFolder);
     int result = 0;
     toBuild = (tests == {}) ? projects : { p | p <- projects, p.name in tests};
@@ -221,8 +224,6 @@ int main(
 
     result = 0;
 
-    lrel[str, int, int] stats = [];
-
     for (n <- buildOrder, proj <- toBuild[n]) {
         println("*** Preparing: <n>");
         p = generatePathConfig(n, proj, repoFolder, libs, package, packageTarget, getProjectLoc);
@@ -237,9 +238,9 @@ int main(
         rascalFiles = [*find(s, "rsc") | s <- p.srcs, (startsWith(s.path, projectRoot.path) || startsWith(s.path, rProjectRoot.path))];
         rascalFiles = sort([f | f <- rascalFiles, !isIgnored(f, p.ignores)]);
 
-        result += run("org.rascalmpl.shell.RascalCompile", n, rProjectRoot, p, rascalFiles, memory, rascalVersion, stats, extraArgs = [*addParallelFlags(proj, rascalFiles, maxCores), "-modules", *[ "<f>" | f <- rascalFiles]]);
+        result += run("org.rascalmpl.shell.RascalCompile", n, rProjectRoot, p, rascalFiles, memory, rascalVersion, collectStats = true, extraArgs = [*addParallelFlags(proj, rascalFiles, maxCores), "-modules", *[ "<f>" | f <- rascalFiles]]);
         if (package) {
-            result += run("org.rascalmpl.shell.RascalPackage", n, rProjectRoot, p, rascalFiles, memory, rascalVersion, stats, extraArgs = ["-sourceLookup", "<rascalVersion>", "-relocatedClasses", "<resolve(rProjectRoot, packageTarget)>"]);
+            result += run("org.rascalmpl.shell.RascalPackage", n, rProjectRoot, p, rascalFiles, memory, rascalVersion, extraArgs = ["-sourceLookup", "<rascalVersion>", "-relocatedClasses", "<resolve(rProjectRoot, packageTarget)>"]);
         }
     }
     println("******\nDone running ");
@@ -257,7 +258,7 @@ int run(
     list[loc] rascalFiles,
     str memory,
     loc rascalVersion,
-    lrel[str, int, int] stats,
+    bool collectStats = false,
     list[str] extraArgs = []
 ) {
     result = 0;
@@ -292,7 +293,9 @@ int run(
         code = exitCode(runner);
         result += code;
         println("*** Finished: <class> on <projectName> < code == 0 ? "✅" : "❌ Failed with error <code>"> (<(stopTime - startTime)/1000>s)");
-        stats += <projectName, code, (stopTime - startTime)/1000>;
+        if (collectStats) {
+            stats += <projectName, code, (stopTime - startTime)/1000>;
+        }
     }
     catch ex :{
         println("Running the runner for <projectName> crashed with <ex>");
