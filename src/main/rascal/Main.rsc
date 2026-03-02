@@ -163,6 +163,8 @@ list[str] addParallelFlags(Project proj, list[loc] rascalFiles, int maxCores) {
 // Resolve this location before our working directory is irrepairably changed later on
 loc testWrapperLocation = resolveLocation(|cwd:///src/main/rascal/TestWrapper.rsc|);
 
+lrel[str, int, int] stats = [];
+
 int main(
     str memory = "4G",
     int maxCores = 4,
@@ -185,6 +187,7 @@ int main(
         return repoFolder + projectName;
     }
 
+    stats = [];
     mkDirectory(repoFolder);
     int result = 0;
     toBuild = (tests == {}) ? projects : { p | p <- projects, p.name in tests};
@@ -225,8 +228,6 @@ int main(
 
     result = 0;
 
-    lrel[str, int, int] stats = [];
-
     for (n <- buildOrder, proj <- toBuild[n]) {
         println("*** Preparing: <n>");
         p = generatePathConfig(n, proj, repoFolder, libs, package, packageTarget, getProjectLoc);
@@ -242,9 +243,9 @@ int main(
         sourceFiles = [f | f <- rascalFiles, !isIgnored(f, p.ignores)];
         testModules = sort([mname | f <- rascalFiles, str mname := getModuleName(f, p), any(pref <- proj.testPrefixes, startsWith(mname, pref))]);
 
-        result += run("org.rascalmpl.shell.RascalCompile", n, rProjectRoot, p, sourceFiles, memory, rascalVersion, stats, extraArgs = [*addParallelFlags(proj, sourceFiles, maxCores), "-modules", *[ "<f>" | f <- sourceFiles]]);
+        result += run("org.rascalmpl.shell.RascalCompile", n, rProjectRoot, p, sourceFiles, memory, rascalVersion, collectStats = true, extraArgs = [*addParallelFlags(proj, sourceFiles, maxCores), "-modules", *[ "<f>" | f <- sourceFiles]]);
         if (package) {
-            result += run("org.rascalmpl.shell.RascalPackage", n, rProjectRoot, p, sourceFiles, memory, rascalVersion, stats, extraArgs = ["-sourceLookup", "<rascalVersion>", "-relocatedClasses", "<resolve(rProjectRoot, packageTarget)>"]);
+            result += run("org.rascalmpl.shell.RascalPackage", n, rProjectRoot, p, sourceFiles, memory, rascalVersion, extraArgs = ["-sourceLookup", "<rascalVersion>", "-relocatedClasses", "<resolve(rProjectRoot, packageTarget)>"]);
         }
         result += runTests(testModules, rascalVersion, repoFolder, n, proj, p);
     }
@@ -277,7 +278,7 @@ int run(
     list[loc] rascalFiles,
     str memory,
     loc rascalVersion,
-    lrel[str, int, int] stats,
+    bool collectStats = false,
     list[str] extraArgs = []
 ) {
     result = 0;
@@ -312,7 +313,9 @@ int run(
         code = exitCode(runner);
         result += code;
         println("*** Finished: <class> on <projectName> < code == 0 ? "✅" : "❌ Failed with error <code>"> (<(stopTime - startTime)/1000>s)");
-        stats += <projectName, code, (stopTime - startTime)/1000>;
+        if (collectStats) {
+            stats += <projectName, code, (stopTime - startTime)/1000>;
+        }
     }
     catch ex :{
         println("Running the runner for <projectName> crashed with <ex>");
