@@ -44,7 +44,7 @@ Projects projects = {
     <"rascal-git", project(|https://github.com/cwi-swat/rascal-git.git|, {"rascal"})>,
     <"php-analysis", project(|https://github.com/cwi-swat/php-analysis.git|, {"rascal", "rascal-git"}, srcs=["src/main/rascal"])>,
     <"rascal-lsp-all", project(|https://github.com/usethesource/rascal-language-servers.git|, {"rascal-all"}, subdir="rascal-lsp", srcs=["src/main/rascal/library","src/main/rascal/lsp"])>,
-    <"rascal-lsp", project(|https://github.com/usethesource/rascal-language-servers.git|, {"rascal", "typepal"}, srcs=["src/main/rascal/library", "src/main/rascal/lsp"], ignores = {"lang/rascal/lsp/refactor", "lang/rascal/tests/rename"}, subdir="rascal-lsp", testPrefixes={"lang::rascal::tests::rename"})>
+    <"rascal-lsp", project(|https://github.com/usethesource/rascal-language-servers.git|, {"rascal", "typepal"}, srcs=["src/main/rascal/library", "src/main/rascal/lsp"], ignores = {"lang/rascal/lsp/refactor", "lang/rascal/tests/rename", "lang/rascal/lsp/IDECheckerWrapper.rsc"}, subdir="rascal-lsp", testPrefixes={"lang::rascal::tests::rename"})>
 };
 
 bool isWindows = /win/i := getSystemProperty("os.name");
@@ -258,6 +258,7 @@ int main(
 
 int runTests(list[str] testModules, loc rascalVersion, loc repoFolder, str projectName, Project proj, PathConfig pcfg) {
     if ({} !:= proj.testPrefixes) {
+        println("*** Starting: test runner on <projectName> (<size(testModules)>)");
         testWrapperDest = getFirstFrom(pcfg.srcs) + "TestWrapper.rsc";
         copy(testWrapperLocation, testWrapperDest, overwrite=true);
         <out, code> = execWithCode("java", args = ["-jar", buildFSPath(rascalVersion), "TestWrapper", "--projectName", projectName, "--testModules", intercalate(" ", testModules)], workingDir = repoFolder + projectName + proj.subdir);
