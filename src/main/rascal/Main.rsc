@@ -261,11 +261,12 @@ int runTests(list[str] testModules, loc rascalVersion, loc repoFolder, str proje
         println("*** Starting: test runner on <projectName> (<size(testModules)>)");
         testWrapperDest = getFirstFrom(pcfg.srcs) + "TestWrapper.rsc";
         copy(testWrapperLocation, testWrapperDest, overwrite=true);
-        <out, code> = execWithCode("java", args = ["-jar", buildFSPath(rascalVersion), "TestWrapper", "--projectName", projectName, "--testModules", intercalate(" ", testModules)], workingDir = repoFolder + projectName + proj.subdir);
+        startTime = realTime();
+        pid = createProcess("java", args = ["-jar", buildFSPath(rascalVersion), "TestWrapper", "--projectName", projectName, "--testModules", intercalate(" ", testModules)], workingDir = projectRoot);
+        code = awaitProcess(pid, printStdOut=false);
+        stopTime = realTime();
         remove(testWrapperDest);
-        if (code != 0) {
-            println(out);
-        }
+        println("*** Finished: test runner on <projectName> < code == 0 ? "✅" : "❌ Failed with error <code>"> (<(stopTime - startTime)/1000>s)");
         return code;
     }
     return 0;
@@ -297,22 +298,9 @@ int run(
         *extraArgs
     ]);
     try {
-        while (isAlive(runner)) {
-            stdOut = readWithWait(runner, 500);
-            if (stdOut != "") {
-                print(stdOut);
-            }
-            stdErr = readFromErr(runner);
-            while (stdErr != "") {
-                println(stdErr);
-                stdErr = readFromErr(runner);
-            }
-        }
-        stopTime = realTime();
-        println(readEntireStream(runner));
-        println(readEntireErrStream(runner));
-        code = exitCode(runner);
+        code = awaitProcess(runner);
         result += code;
+        stopTime = realTime();
         println("*** Finished: <class> on <projectName> < code == 0 ? "✅" : "❌ Failed with error <code>"> (<(stopTime - startTime)/1000>s)");
         if (collectStats) {
             stats += <projectName, code, (stopTime - startTime)/1000>;
@@ -322,8 +310,41 @@ int run(
         println("Running the runner for <projectName> crashed with <ex>");
         result += 1;
     }
+    return result;
+}
+
+int awaitProcess(int runner, bool printStdOut = true, bool printStdErr = true) {
+    int code = -1;
+    try {
+        while (isAlive(runner)) {
+            if (printStdOut) {
+                stdOut = readWithWait(runner, 500);
+                if (stdOut != "") {
+                    print(stdOut);
+                }
+            }
+            if (printStdErr) {
+                stdErr = readFromErr(runner);
+                while (stdErr != "") {
+                    println(stdErr);
+                    stdErr = readFromErr(runner);
+                }
+            }
+        }
+        if (printStdOut) {
+            println(readEntireStream(runner));
+        }
+        if (printStdErr) {
+            println(readEntireErrStream(runner));
+        }
+        code = exitCode(runner);
+    }
+    catch ex :{
+        throw ex;
+    }
     finally {
         killProcess(runner);
+        return code;
     }
-    return result;
+    return code;
 }
