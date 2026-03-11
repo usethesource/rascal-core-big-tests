@@ -256,20 +256,42 @@ int main(
     return result;
 }
 
+tuple[str, loc] findUniqueName(str basename, loc dir, str extension = "rsc") {
+    if (!exists(dir + "<basename>.<extension>")) {
+        return <basename, dir + "<basename>.<extension>">;
+    }
+
+    int n = 1;
+    int MAX_N = 100;
+    while (exists(dir + "<basename><n>.<extension>") && n < MAX_N) {
+        n += 1;
+    }
+    if (n == MAX_N) {
+        throw "Cannot find unique file name for <basename>.<extension> in <dir>";
+    }
+    return <basename, dir + "<basename><n>.<extension>">;
+}
+
 int runTests(list[str] testModules, loc rascalVersion, loc repoFolder, str projectName, Project proj, PathConfig pcfg) {
+    int code = 0;
     if ({} !:= proj.testPrefixes) {
         println("*** Starting: test runner on <projectName> (<size(testModules)>)");
-        testWrapperDest = getFirstFrom(pcfg.srcs) + "TestWrapper.rsc";
-        copy(testWrapperLocation, testWrapperDest, overwrite=true);
+        destDir = getFirstFrom(pcfg.srcs);
+        <testWrapperName, testWrapperDest> = findUniqueName("TestWrapper", destDir);
+        copy(testWrapperLocation, testWrapperDest);
         startTime = realTime();
-        pid = createProcess("java", args = ["-jar", buildFSPath(rascalVersion), "TestWrapper", "--projectName", projectName, "--testModules", intercalate(",", testModules)], workingDir = projectRoot(repoFolder, projectName, proj));
-        code = awaitProcess(pid);
-        stopTime = realTime();
-        remove(testWrapperDest);
-        println("*** Finished: test runner on <projectName> < code == 0 ? "✅" : "❌ Failed with error <code>"> (<(stopTime - startTime)/1000>s)");
-        return code;
+        try {
+            pid = createProcess("java", args = ["-jar", buildFSPath(rascalVersion), testWrapperName, "--projectName", projectName, "--testModules", intercalate(",", testModules)], workingDir = projectRoot(repoFolder, projectName, proj));
+            code = awaitProcess(pid);
+        } catch e: {
+            throw e;
+        } finally {
+            stopTime = realTime();
+            remove(testWrapperDest);
+            println("*** Finished: test runner on <projectName> < code == 0 ? "✅" : "❌ Failed with error <code>"> (<(stopTime - startTime)/1000>s)");
+        }
     }
-    return 0;
+    return code;
 }
 
 int run(
