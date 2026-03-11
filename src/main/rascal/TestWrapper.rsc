@@ -9,15 +9,16 @@ int main(
     str projectName = "",
     str testModules = ""
     ) {
-    list[str] failed = [];
-    for (str mname <- split(" ", testModules)) {
-        failed += [r.message | r:testResult(_, false, _) <- runTests(mname)];
+    int result = 0;
+    mnames = split(",", testModules);
+    for (str mname <- mnames) {
+        failed = [r.message | r:testResult(_, false, _) <- runTests(mname)];
+        result += size(failed);
+
+        for (m <- failed) {
+            print(m);
+        }
     }
 
-    if (failed != []) {
-        println("<projectName>: <size(failed)> tests failed:");
-    } else {
-        println("<projectName>: all tests succeeded");
-    }
-    return size(failed);
+    return result;
 }

@@ -44,7 +44,7 @@ Projects projects = {
     <"rascal-git", project(|https://github.com/cwi-swat/rascal-git.git|, {"rascal"})>,
     <"php-analysis", project(|https://github.com/cwi-swat/php-analysis.git|, {"rascal", "rascal-git"}, srcs=["src/main/rascal"])>,
     <"rascal-lsp-all", project(|https://github.com/usethesource/rascal-language-servers.git|, {"rascal-all"}, subdir="rascal-lsp", srcs=["src/main/rascal/library","src/main/rascal/lsp"])>,
-    <"rascal-lsp", project(|https://github.com/usethesource/rascal-language-servers.git|, {"rascal", "typepal"}, srcs=["src/main/rascal/library", "src/main/rascal/lsp"], ignores = {"lang/rascal/lsp/refactor", "lang/rascal/tests/rename", "lang/rascal/lsp/IDECheckerWrapper.rsc"}, subdir="rascal-lsp", testPrefixes={"lang::rascal::tests::rename"})>
+    <"rascal-lsp", project(|https://github.com/usethesource/rascal-language-servers.git|, {"rascal", "typepal"}, srcs=["src/main/rascal/library", "src/main/rascal/lsp"], branch="fix/rename-pure-rascal", ignores = {"lang/rascal/lsp/refactor", "lang/rascal/tests/rename", "lang/rascal/lsp/IDECheckerWrapper.rsc"}, subdir="rascal-lsp", testPrefixes={"lang::rascal::tests::rename"})>
 };
 
 bool isWindows = /win/i := getSystemProperty("os.name");
@@ -262,8 +262,8 @@ int runTests(list[str] testModules, loc rascalVersion, loc repoFolder, str proje
         testWrapperDest = getFirstFrom(pcfg.srcs) + "TestWrapper.rsc";
         copy(testWrapperLocation, testWrapperDest, overwrite=true);
         startTime = realTime();
-        pid = createProcess("java", args = ["-jar", buildFSPath(rascalVersion), "TestWrapper", "--projectName", projectName, "--testModules", intercalate(" ", testModules)], workingDir = projectRoot);
-        code = awaitProcess(pid, printStdOut=false);
+        pid = createProcess("java", args = ["-jar", buildFSPath(rascalVersion), "TestWrapper", "--projectName", projectName, "--testModules", intercalate(",", testModules)], workingDir = projectRoot(repoFolder, projectName, proj));
+        code = awaitProcess(pid);
         stopTime = realTime();
         remove(testWrapperDest);
         println("*** Finished: test runner on <projectName> < code == 0 ? "✅" : "❌ Failed with error <code>"> (<(stopTime - startTime)/1000>s)");
@@ -317,11 +317,9 @@ int awaitProcess(int runner, bool printStdOut = true, bool printStdErr = true) {
     int code = -1;
     try {
         while (isAlive(runner)) {
-            if (printStdOut) {
-                stdOut = readWithWait(runner, 500);
-                if (stdOut != "") {
-                    print(stdOut);
-                }
+            stdOut = readWithWait(runner, 500);
+            if (printStdOut && stdOut != "") {
+                print(stdOut);
             }
             if (printStdErr) {
                 stdErr = readFromErr(runner);
