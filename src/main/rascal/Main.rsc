@@ -163,7 +163,7 @@ list[str] addParallelFlags(Project proj, list[loc] rascalFiles, int maxCores) {
 // Resolve this location before our working directory is irreparably changed later on
 loc testWrapperLocation = resolveLocation(|cwd:///src/main/rascal/TestWrapper.rsc|);
 
-lrel[str, int, int] stats = [];
+lrel[str project, str task, int code, int time] stats = [];
 
 int main(
     str memory = "4G",
@@ -243,15 +243,19 @@ int main(
         sourceFiles = [f | f <- rascalFiles, !isIgnored(f, p.ignores)];
         testModules = sort([mname | f <- rascalFiles, str mname := getModuleName(f, p), any(pref <- proj.testPrefixes, startsWith(mname, pref))]);
 
-        result += run("org.rascalmpl.shell.RascalCompile", n, rProjectRoot, p, sourceFiles, memory, rascalVersion, collectStats = true, extraArgs = [*addParallelFlags(proj, sourceFiles, maxCores), "-modules", *[ "<f>" | f <- sourceFiles]]);
+        result += run("org.rascalmpl.shell.RascalCompile", n, rProjectRoot, p, sourceFiles, memory, rascalVersion, extraArgs = [*addParallelFlags(proj, sourceFiles, maxCores), "-modules", *[ "<f>" | f <- sourceFiles]]);
         if (package) {
             result += run("org.rascalmpl.shell.RascalPackage", n, rProjectRoot, p, sourceFiles, memory, rascalVersion, extraArgs = ["-sourceLookup", "<rascalVersion>", "-relocatedClasses", "<resolve(rProjectRoot, packageTarget)>"]);
         }
         result += runTests(testModules, rascalVersion, repoFolder, n, proj, p);
     }
     println("******\nDone running ");
-    for (<n, e, t> <- stats) {
-        println("- <n> <e == 0 ? "✅" : "❌"> <t>s");
+    for (p <- toSet(stats.project)) {
+        println("- <p>");
+        timeWidth = size("<max(stats[p]<2>)>");
+        for (<n, e, t> <- stats[p]) {
+            println("  <e == 0 ? "✅" : "❌"> <right("<t>", timeWidth)>s: <n>");
+        }
     }
     return result;
 }
@@ -288,7 +292,9 @@ int runTests(list[str] testModules, loc rascalVersion, loc repoFolder, str proje
         } finally {
             stopTime = realTime();
             remove(testWrapperDest);
-            println("*** Finished: test runner on <projectName> < code == 0 ? "✅" : "❌ Failed with error <code>"> (<(stopTime - startTime)/1000>s)");
+            elapsedTime = (stopTime - startTime) / 1000;
+            println("*** Finished: test runner on <projectName> < code == 0 ? "✅" : "❌ Failed with error <code>"> (<elapsedTime>s)");
+            stats += <projectName, "tests", code, elapsedTime>;
         }
     }
     return code;
@@ -302,7 +308,6 @@ int run(
     list[loc] rascalFiles,
     str memory,
     loc rascalVersion,
-    bool collectStats = false,
     list[str] extraArgs = []
 ) {
     result = 0;
@@ -323,10 +328,9 @@ int run(
         code = awaitProcess(runner);
         result += code;
         stopTime = realTime();
-        println("*** Finished: <class> on <projectName> < code == 0 ? "✅" : "❌ Failed with error <code>"> (<(stopTime - startTime)/1000>s)");
-        if (collectStats) {
-            stats += <projectName, code, (stopTime - startTime)/1000>;
-        }
+        elapsedTime = (stopTime - startTime) / 1000;
+        println("*** Finished: <class> on <projectName> < code == 0 ? "✅" : "❌ Failed with error <code>"> (<elapsedTime>s)");
+        stats += <projectName, class, code, elapsedTime>;
     }
     catch ex :{
         println("Running the runner for <projectName> crashed with <ex>");
