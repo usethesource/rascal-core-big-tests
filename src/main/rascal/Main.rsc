@@ -160,7 +160,7 @@ list[str] addParallelFlags(Project proj, list[loc] rascalFiles, int maxCores) {
     return result;
 }
 
-// Resolve this location before our working directory is irrepairably changed later on
+// Resolve this location before our working directory is irreparably changed later on
 loc testWrapperLocation = resolveLocation(|cwd:///src/main/rascal/TestWrapper.rsc|);
 
 lrel[str, int, int] stats = [];
