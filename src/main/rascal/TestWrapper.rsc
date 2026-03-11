@@ -6,7 +6,6 @@ import String;
 import util::Test;
 
 int main(
-    str projectName = "",
     str testModules = ""
     ) {
     int result = 0;

@@ -285,7 +285,7 @@ int runTests(list[str] testModules, loc rascalVersion, loc repoFolder, str proje
         copy(testWrapperLocation, testWrapperDest);
         startTime = realTime();
         try {
-            pid = createProcess("java", args = ["-jar", buildFSPath(rascalVersion), testWrapperName, "--projectName", projectName, "--testModules", intercalate(",", testModules)], workingDir = projectRoot(repoFolder, projectName, proj));
+            pid = createProcess("java", args = ["-jar", buildFSPath(rascalVersion), testWrapperName, "--testModules", intercalate(",", testModules)], workingDir = projectRoot(repoFolder, projectName, proj));
             code = awaitProcess(pid);
         } catch e: {
             throw e;
