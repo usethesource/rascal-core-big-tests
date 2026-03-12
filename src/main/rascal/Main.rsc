@@ -44,7 +44,7 @@ Projects projects = {
     <"rascal-git", project(|https://github.com/cwi-swat/rascal-git.git|, {"rascal"})>,
     <"php-analysis", project(|https://github.com/cwi-swat/php-analysis.git|, {"rascal", "rascal-git"}, srcs=["src/main/rascal"])>,
     <"rascal-lsp-all", project(|https://github.com/usethesource/rascal-language-servers.git|, {"rascal-all"}, subdir="rascal-lsp", srcs=["src/main/rascal/library","src/main/rascal/lsp"])>,
-    <"rascal-lsp", project(|https://github.com/usethesource/rascal-language-servers.git|, {"rascal", "typepal"}, srcs=["src/main/rascal/library", "src/main/rascal/lsp"], branch="fix/rename-pure-rascal", ignores = {"lang/rascal/lsp/refactor", "lang/rascal/tests/rename", "lang/rascal/lsp/IDECheckerWrapper.rsc"}, subdir="rascal-lsp", testPrefixes={"lang::rascal::tests::rename"})>
+    <"rascal-lsp", project(|https://github.com/usethesource/rascal-language-servers.git|, {"rascal", "typepal"}, srcs=["src/main/rascal/library", "src/main/rascal/lsp"], ignores = {"lang/rascal/lsp/refactor", "lang/rascal/tests/rename", "lang/rascal/lsp/IDECheckerWrapper.rsc"}, subdir="rascal-lsp", testPrefixes={"lang::rascal::tests::rename"})>
 };
 
 bool isWindows = /win/i := getSystemProperty("os.name");
@@ -247,7 +247,7 @@ int main(
         if (package) {
             result += run("org.rascalmpl.shell.RascalPackage", n, rProjectRoot, p, sourceFiles, memory, rascalVersion, extraArgs = ["-sourceLookup", "<rascalVersion>", "-relocatedClasses", "<resolve(rProjectRoot, packageTarget)>"]);
         }
-        result += runTests(testModules, rascalVersion, repoFolder, n, proj, p);
+        result += runTests(testModules, rascalVersion, repoFolder, n, proj, p, pcfgs);
     }
     println("******\nDone running ");
     for (p <- toSet(stats.project)) {
@@ -276,16 +276,22 @@ tuple[str, loc] findUniqueName(str basename, loc dir, str extension = "rsc") {
     return <basename, dir + "<basename><n>.<extension>">;
 }
 
-int runTests(list[str] testModules, loc rascalVersion, loc repoFolder, str projectName, Project proj, PathConfig pcfg) {
+int runTests(list[str] testModules, loc rascalVersion, loc repoFolder, str projectName, Project proj, PathConfig pcfg, lrel[str, PathConfig] pcfgs) {
     int code = 0;
     if ({} !:= proj.testPrefixes) {
         println("*** Starting: test runner on <projectName> (<size(testModules)>)");
+
+        // Prepare test wrapper
         destDir = getFirstFrom(pcfg.srcs);
         <testWrapperName, testWrapperDest> = findUniqueName("TestWrapper", destDir);
         copy(testWrapperLocation, testWrapperDest);
+
+        // Prepare environment
+        envVars = ("ADDITIONAL_TPLS": "<resolveLocation(rpcfg.bin)>" | rpcfg <- pcfgs["rascal"]);
+
         startTime = realTime();
         try {
-            pid = createProcess("java", args = ["-jar", buildFSPath(rascalVersion), testWrapperName, "--testModules", intercalate(",", testModules)], workingDir = projectRoot(repoFolder, projectName, proj));
+            pid = createProcess("java", args = ["-jar", buildFSPath(rascalVersion), testWrapperName, "--testModules", intercalate(",", testModules)], workingDir = projectRoot(repoFolder, projectName, proj), envVars = envVars);
             code = awaitProcess(pid);
         } catch e: {
             throw e;
