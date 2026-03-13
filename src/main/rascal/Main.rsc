@@ -22,13 +22,14 @@ data Project
         list[str] srcs = [], // override source calculation
         set[str] ignores = {}, // directories to ignore
         bool parallel = false,
-        set[str] parallelPreCheck = {}
+        set[str] parallelPreCheck = {},
+        set[str] testPrefixes={}
     );
 
 alias Projects = rel[str name, Project config];
 
 Projects projects = {
-    <"rascal", project(|https://github.com/usethesource/rascal.git|, {}, srcs = ["src/org/rascalmpl/library"], ignores={"experiments", "resource", "lang/rascal/tests", "lang/rascal/syntax/test"}, parallel = true, parallelPreCheck = {"src/org/rascalmpl/library/Prelude.rsc"})>,
+    <"rascal", project(|https://github.com/usethesource/rascal.git|, {}, srcs = ["src/org/rascalmpl/library"], ignores={"experiments", "resource", "lang/rascal/tests", "lang/rascal/syntax/tests", "lang/rascal/grammar/tests"}, parallel = true, parallelPreCheck = {"src/org/rascalmpl/library/Prelude.rsc"})>,
     <"rascal-all", project(|https://github.com/usethesource/rascal.git|, {}, branch=(getSystemProperties()["RASCAL_ALL_BRANCH"] ? "main"), ignores={"lang/rascal/tutor/examples", "NestedOr.rsc"}, parallel = true, parallelPreCheck = {"src/org/rascalmpl/library/Prelude.rsc", "src/org/rascalmpl/compiler/lang/rascalcore/check/CheckerCommon.rsc"})>,
     <"typepal", project(|https://github.com/usethesource/typepal.git|, {"rascal"}, ignores={"examples"})>,
     <"typepal-boot", project(|https://github.com/usethesource/typepal.git|, {}, rascalLib=true, ignores={"examples"})>,
@@ -43,7 +44,7 @@ Projects projects = {
     <"rascal-git", project(|https://github.com/cwi-swat/rascal-git.git|, {"rascal"})>,
     <"php-analysis", project(|https://github.com/cwi-swat/php-analysis.git|, {"rascal", "rascal-git"}, srcs=["src/main/rascal"])>,
     <"rascal-lsp-all", project(|https://github.com/usethesource/rascal-language-servers.git|, {"rascal-all"}, subdir="rascal-lsp", srcs=["src/main/rascal/library","src/main/rascal/lsp"])>,
-    <"rascal-lsp", project(|https://github.com/usethesource/rascal-language-servers.git|, {"rascal", "typepal"}, srcs=["src/main/rascal/library"], subdir="rascal-lsp")>
+    <"rascal-lsp", project(|https://github.com/usethesource/rascal-language-servers.git|, {"rascal", "typepal"}, srcs=["src/main/rascal/library", "src/main/rascal/lsp"], ignores = {"lang/rascal/lsp/refactor", "lang/rascal/tests/rename", "lang/rascal/lsp/IDECheckerWrapper.rsc"}, subdir="rascal-lsp", testPrefixes={"lang::rascal::tests::rename"})>
 };
 
 bool isWindows = /win/i := getSystemProperty("os.name");
@@ -159,7 +160,10 @@ list[str] addParallelFlags(Project proj, list[loc] rascalFiles, int maxCores) {
     return result;
 }
 
-lrel[str, int, int] stats = [];
+// Resolve this location before our working directory is irreparably changed later on
+loc testWrapperLocation = resolveLocation(|cwd:///src/main/rascal/TestWrapper.rsc|);
+
+lrel[str project, str task, int code, int time] stats = [];
 
 int main(
     str memory = "4G",
@@ -235,19 +239,71 @@ int main(
         iprintln(p);
         loc projectRoot = repoFolder + n;
         rProjectRoot = resolveLocation(projectRoot);
-        rascalFiles = [*find(s, "rsc") | s <- p.srcs, (startsWith(s.path, projectRoot.path) || startsWith(s.path, rProjectRoot.path))];
-        rascalFiles = sort([f | f <- rascalFiles, !isIgnored(f, p.ignores)]);
+        rascalFiles = sort([*find(s, "rsc") | s <- p.srcs, (startsWith(s.path, projectRoot.path) || startsWith(s.path, rProjectRoot.path))]);
+        sourceFiles = [f | f <- rascalFiles, !isIgnored(f, p.ignores)];
+        testModules = sort([mname | f <- rascalFiles, str mname := getModuleName(f, p), any(pref <- proj.testPrefixes, startsWith(mname, pref))]);
 
-        result += run("org.rascalmpl.shell.RascalCompile", n, rProjectRoot, p, rascalFiles, memory, rascalVersion, collectStats = true, extraArgs = [*addParallelFlags(proj, rascalFiles, maxCores), "-modules", *[ "<f>" | f <- rascalFiles]]);
+        result += run("org.rascalmpl.shell.RascalCompile", n, rProjectRoot, p, sourceFiles, memory, rascalVersion, extraArgs = [*addParallelFlags(proj, sourceFiles, maxCores), "-modules", *[ "<f>" | f <- sourceFiles]]);
         if (package) {
-            result += run("org.rascalmpl.shell.RascalPackage", n, rProjectRoot, p, rascalFiles, memory, rascalVersion, extraArgs = ["-sourceLookup", "<rascalVersion>", "-relocatedClasses", "<resolve(rProjectRoot, packageTarget)>"]);
+            result += run("org.rascalmpl.shell.RascalPackage", n, rProjectRoot, p, sourceFiles, memory, rascalVersion, extraArgs = ["-sourceLookup", "<rascalVersion>", "-relocatedClasses", "<resolve(rProjectRoot, packageTarget)>"]);
         }
+        result += runTests(testModules, rascalVersion, repoFolder, n, proj, p, pcfgs);
     }
     println("******\nDone running ");
-    for (<n, e, t> <- stats) {
-        println("- <n> <e == 0 ? "✅" : "❌"> <t>s");
+    for (p <- toSet(stats.project)) {
+        println("- <p>");
+        timeWidth = size("<max(stats[p]<2>)>");
+        for (<n, e, t> <- stats[p]) {
+            println("  <e == 0 ? "✅" : "❌"> <right("<t>", timeWidth)>s: <n>");
+        }
     }
     return result;
+}
+
+tuple[str, loc] findUniqueName(str basename, loc dir, str extension = "rsc") {
+    if (!exists(dir + "<basename>.<extension>")) {
+        return <basename, dir + "<basename>.<extension>">;
+    }
+
+    int n = 1;
+    int MAX_N = 100;
+    while (exists(dir + "<basename><n>.<extension>") && n < MAX_N) {
+        n += 1;
+    }
+    if (n == MAX_N) {
+        throw "Cannot find unique file name for <basename>.<extension> in <dir>";
+    }
+    return <basename, dir + "<basename><n>.<extension>">;
+}
+
+int runTests(list[str] testModules, loc rascalVersion, loc repoFolder, str projectName, Project proj, PathConfig pcfg, lrel[str, PathConfig] pcfgs) {
+    int code = 0;
+    if ({} !:= proj.testPrefixes) {
+        println("*** Starting: test runner on <projectName> (<size(testModules)>)");
+
+        // Prepare test wrapper
+        destDir = getFirstFrom(pcfg.srcs);
+        <testWrapperName, testWrapperDest> = findUniqueName("TestWrapper", destDir);
+        copy(testWrapperLocation, testWrapperDest);
+
+        // Prepare environment
+        envVars = ("ADDITIONAL_TPLS": "<resolveLocation(rpcfg.bin)>" | rpcfg <- pcfgs["rascal"]);
+
+        startTime = realTime();
+        try {
+            pid = createProcess("java", args = ["-jar", buildFSPath(rascalVersion), testWrapperName, "--testModules", intercalate(",", testModules)], workingDir = projectRoot(repoFolder, projectName, proj), envVars = envVars);
+            code = awaitProcess(pid);
+        } catch e: {
+            throw e;
+        } finally {
+            stopTime = realTime();
+            remove(testWrapperDest);
+            elapsedTime = (stopTime - startTime) / 1000;
+            println("*** Finished: test runner on <projectName> < code == 0 ? "✅" : "❌ Failed with error <code>"> (<elapsedTime>s)");
+            stats += <projectName, "tests", code, elapsedTime>;
+        }
+    }
+    return code;
 }
 
 int run(
@@ -258,7 +314,6 @@ int run(
     list[loc] rascalFiles,
     str memory,
     loc rascalVersion,
-    bool collectStats = false,
     list[str] extraArgs = []
 ) {
     result = 0;
@@ -276,33 +331,50 @@ int run(
         *extraArgs
     ]);
     try {
-        while (isAlive(runner)) {
-            stdOut = readWithWait(runner, 500);
-            if (stdOut != "") {
-                print(stdOut);
-            }
-            stdErr = readFromErr(runner);
-            while (stdErr != "") {
-                println(stdErr);
-                stdErr = readFromErr(runner);
-            }
-        }
-        stopTime = realTime();
-        println(readEntireStream(runner));
-        println(readEntireErrStream(runner));
-        code = exitCode(runner);
+        code = awaitProcess(runner);
         result += code;
-        println("*** Finished: <class> on <projectName> < code == 0 ? "✅" : "❌ Failed with error <code>"> (<(stopTime - startTime)/1000>s)");
-        if (collectStats) {
-            stats += <projectName, code, (stopTime - startTime)/1000>;
-        }
+        stopTime = realTime();
+        elapsedTime = (stopTime - startTime) / 1000;
+        println("*** Finished: <class> on <projectName> < code == 0 ? "✅" : "❌ Failed with error <code>"> (<elapsedTime>s)");
+        stats += <projectName, class, code, elapsedTime>;
     }
     catch ex :{
         println("Running the runner for <projectName> crashed with <ex>");
         result += 1;
     }
+    return result;
+}
+
+int awaitProcess(int runner, bool printStdOut = true, bool printStdErr = true) {
+    int code = -1;
+    try {
+        while (isAlive(runner)) {
+            stdOut = readWithWait(runner, 500);
+            if (printStdOut && stdOut != "") {
+                print(stdOut);
+            }
+            if (printStdErr) {
+                stdErr = readFromErr(runner);
+                while (stdErr != "") {
+                    println(stdErr);
+                    stdErr = readFromErr(runner);
+                }
+            }
+        }
+        if (printStdOut) {
+            println(readEntireStream(runner));
+        }
+        if (printStdErr) {
+            println(readEntireErrStream(runner));
+        }
+        code = exitCode(runner);
+    }
+    catch ex :{
+        throw ex;
+    }
     finally {
         killProcess(runner);
+        return code;
     }
-    return result;
+    return code;
 }
