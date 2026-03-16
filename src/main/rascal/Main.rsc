@@ -260,9 +260,9 @@ int main(
     return result;
 }
 
-tuple[str, loc] findUniqueName(str basename, loc dir, str extension = "rsc") {
+str findUniqueName(str basename, loc dir, str extension = "rsc") {
     if (!exists(dir + "<basename>.<extension>")) {
-        return <basename, dir + "<basename>.<extension>">;
+        return basename;
     }
 
     int n = 1;
@@ -273,7 +273,13 @@ tuple[str, loc] findUniqueName(str basename, loc dir, str extension = "rsc") {
     if (n == MAX_N) {
         throw "Cannot find unique file name for <basename>.<extension> in <dir>";
     }
-    return <basename, dir + "<basename><n>.<extension>">;
+    return "<basename><n>";
+}
+
+loc copyAndRename(loc fromLoc, loc toFolder, str newName, str oldName = "TestWrapper") {
+    dest = toFolder + "<newName>.rsc";
+    writeFile(dest, replaceAll(readFile(fromLoc), oldName, newName));
+    return dest;
 }
 
 int runTests(list[str] testModules, loc rascalVersion, loc repoFolder, str projectName, Project proj, PathConfig pcfg, lrel[str, PathConfig] pcfgs) {
@@ -283,8 +289,8 @@ int runTests(list[str] testModules, loc rascalVersion, loc repoFolder, str proje
 
         // Prepare test wrapper
         destDir = getFirstFrom(pcfg.srcs);
-        <testWrapperName, testWrapperDest> = findUniqueName("TestWrapper", destDir);
-        copy(testWrapperLocation, testWrapperDest);
+        testWrapperName = findUniqueName("TestWrapper", destDir);
+        testWrapperDest = copyAndRename(testWrapperLocation, destDir, testWrapperName);
 
         // Prepare environment
         envVars = ("ADDITIONAL_TPLS": "<resolveLocation(rpcfg.bin)>" | rpcfg <- pcfgs["rascal"]);
