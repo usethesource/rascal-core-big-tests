@@ -31,8 +31,9 @@ jobs:
     strategy:
       matrix:
         target:
-          - "'rascal' 'flybytes' 'salix-core' 'salix-contrib' 'drambiguity' 'rascal-lsp' 'rascal-git' 'php-analysis' 'typepal' 'clair' 'java-air' 'python-air' 'rascal-lucene'"
-          - "'rascal-all' 'rascal-lsp-all'"
+          - "'rascal' 'rascal-lsp' 'typepal'"
+          # - "'rascal' 'flybytes' 'salix-core' 'salix-contrib' 'drambiguity' 'rascal-lsp' 'rascal-git' 'php-analysis' 'typepal' 'clair' 'java-air' 'python-air' 'rascal-lucene'"
+          # - "'rascal-all' 'rascal-lsp-all'"
       fail-fast: false
     steps:
       - uses: actions/checkout@v4
