@@ -179,6 +179,8 @@ int main(
     set[str] tests = {/*all*/}
     ) {
 
+    repoFolder = resolveLocation(repoFolder); // get rid of any relative schemes
+
     loc getProjectLoc(str projectName) {
         int res = updateRepos({p | p:<projectName, _> <- projects}, repoFolder, full);
         if (res != 0) {
