@@ -27,7 +27,7 @@ env:
 
 jobs:
   test:
-    runs-on: buildjet-4vcpu-ubuntu-2204
+    runs-on: ubicloud-standard-4
     strategy:
       matrix:
         target:
@@ -74,7 +74,7 @@ jobs:
           java -DRASCAL_ALL_BRANCH="${{ inputs.rascal_version }}" -Xmx500m -jar ${{ runner.temp }}/rascal.jar Main \
             --libs "${{ inputs.dependencies_on_lib_path }}" \
             --maxCores 4 \
-            --memory 10G \
+            --memory 12G \
             --rascalVersion "|file:///${{ runner.temp }}/rascal.jar|" \
             --repoFolder "|cwd:///repos|" \
             --full false \
