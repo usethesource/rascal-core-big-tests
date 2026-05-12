@@ -49,7 +49,7 @@ while getopts ":hsfd:r:c:t:" opt; do
 done
 shift $(expr $OPTIND - 1 )
 
-if [ "$RASCAL_JAR" -eq "" ]; then
+if [ "$RASCAL_JAR" = "" ]; then
   echo "Missing rascal.jar, please provide rascal jar via -r"
   exit 1
 fi
