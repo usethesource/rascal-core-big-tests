@@ -6,7 +6,7 @@ set -exo pipefail
 source parse-args.sh
 
 TESTS=""
-if [ $# -ge 0 ]; then
+if [ $# -gt 0 ]; then
   TESTS="--tests $@"
 fi
 
