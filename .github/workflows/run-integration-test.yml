@@ -7,6 +7,12 @@ on:
         description: 'rascal branch/tag to checkout'
         required: true
         default: 'main'
+
+      typepal_version:
+        description: 'typepal branch/tag to checkout'
+        required: true
+        default: 'main'
+
       dependencies_on_lib_path:
         description: 'Put tpls of dependencies on lib path'
         required: true
@@ -42,6 +48,13 @@ jobs:
           ref: ${{ inputs.rascal_version }}
           path: 'deps/rascal'
 
+      - uses: actions/checkout@v4
+        name: 'Checkout typepal (${{ inputs.typepal_version }})'
+        with:
+          repository: 'usethesource/typepal'
+          ref: ${{ inputs.typepal_version }}
+          path: 'deps/typepal'
+
       - uses: s4u/maven-settings-action@v3.1.0
         if: ${{ env.IS_OWN_PR != '' }}
         with:
@@ -54,6 +67,9 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
           cache-dependency-path: 'deps/rascal/pom.xml'
+      - name: Install typepal
+        run: mvn -B install -Drascal.tutor.skip -DskipTests -Drascal.compile.skip -Drascal.package.skip
+        working-directory: deps/typepal
       - name: Compile rascal java
         run: mvn -B clean compile package -Drascal.tutor.skip -DskipTests -Drascal.compile.skip -Drascal.package.skip
         working-directory: deps/rascal
@@ -71,7 +87,7 @@ jobs:
         env:
           JAVA_TOOL_OPTIONS: "-Djava.io.tmpdir=${{ runner.temp }}"
         run: |
-          java -DRASCAL_ALL_BRANCH="${{ inputs.rascal_version }}" -Xmx500m -jar ${{ runner.temp }}/rascal.jar Main \
+          java -DRASCAL_BRANCH="${{ inputs.rascal_version }}" -DTYPEPAL_BRANCH="${{ inputs.typepal_version }}" -DRASCAL_ALL_BRANCH="${{ inputs.rascal_version }}" -Xmx500m -jar ${{ runner.temp }}/rascal.jar Main \
             --libs "${{ inputs.dependencies_on_lib_path }}" \
             --maxCores 4 \
             --memory 12G \
