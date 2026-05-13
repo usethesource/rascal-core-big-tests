@@ -1,5 +1,5 @@
 name: Integration Test
-run-name: Testing ${{ inputs.rascal_version }}
+run-name: Testing `${{ inputs.rascal_version }}` (Rascal) with `${{ inputs.typepal_version }}` (Typepal)
 on:
   workflow_dispatch:
     inputs:
