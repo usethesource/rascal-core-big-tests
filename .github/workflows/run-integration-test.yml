@@ -1,5 +1,5 @@
 name: Integration Test
-run-name: Testing `${{ inputs.rascal_version }}` (Rascal) with `${{ case(inputs.typepal_version != '', inputs.typepal_version, 'version in pom.xml') }}` (Typepal)
+run-name: Testing `${{ inputs.rascal_version }}` (Rascal) with ${{ case(inputs.typepal_version != '', format('`{0}`', inputs.typepal_version), 'version in pom.xml') }} (Typepal)
 on:
   workflow_dispatch:
     inputs:
@@ -9,7 +9,7 @@ on:
         default: 'main'
 
       typepal_version:
-        description: 'typepal branch/tag to checkout (leave empty to read from POM)'
+        description: 'typepal branch/tag to checkout (leave empty to read in pom.xml)'
         required: false
         default: ''
 
