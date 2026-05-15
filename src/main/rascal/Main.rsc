@@ -146,7 +146,7 @@ int updateRepos(Projects projs, loc repoFolder, bool full) {
         if (exists(targetFolder)) {
             println("**** Updating <n>");
             checkOutput("fetch", execWithCode("git", args=["fetch"], workingDir=targetFolder));
-            checkOutput("reset", execWithCode("git", args=["reset", "--hard", "origin/<proj.branch>"], workingDir=targetFolder));
+            checkOutput("reset", execWithCode("git", args=["reset", "--hard", "<proj.branch>"], workingDir=targetFolder));
         }
         else {
             println("**** Cloning <n>");
