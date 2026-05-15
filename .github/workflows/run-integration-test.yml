@@ -49,6 +49,7 @@ jobs:
           path: 'deps/rascal'
 
       - uses: actions/checkout@v4
+        if: ${{ inputs.typepal_version != '' }}
         name: 'Checkout typepal (${{ inputs.typepal_version }})'
         with:
           repository: 'usethesource/typepal'
