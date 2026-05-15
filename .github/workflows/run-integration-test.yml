@@ -9,9 +9,9 @@ on:
         default: 'main'
 
       typepal_version:
-        description: 'typepal branch/tag to checkout'
+        description: 'typepal branch/tag to checkout (leave empty to read from POM)'
         required: true
-        default: 'main'
+        default: ''
 
       dependencies_on_lib_path:
         description: 'Put tpls of dependencies on lib path'
@@ -67,12 +67,22 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
           cache-dependency-path: 'deps/rascal/pom.xml'
+
       - name: Install typepal
+        if: ${{ inputs.typepal_version != '' }}
         run: mvn -B install -Drascal.tutor.skip -DskipTests -Drascal.compile.skip -Drascal.package.skip
         working-directory: deps/typepal
+
+      - name: Read typepal version from pom.xml
+        if: ${{ inputs.typepal_version == '' }}
+        id: read-pom
+        run: echo "typepal_version=$(mvn dependency:list | grep typepal | sed 's/.*org.rascalmpl:typepal:jar:\(.*\):.*/\1/')" >> "$GITHUB_OUTPUT"
+        working-directory: deps/rascal
+
       - name: Compile rascal java
         run: mvn -B clean compile package -Drascal.tutor.skip -DskipTests -Drascal.compile.skip -Drascal.package.skip
         working-directory: deps/rascal
+
       - name: copy rascal jar to predictable location and cleanup
         run: |
           rm deps/rascal/target/*-sources.jar
@@ -87,7 +97,7 @@ jobs:
         env:
           JAVA_TOOL_OPTIONS: "-Djava.io.tmpdir=${{ runner.temp }}"
         run: |
-          java -DRASCAL_BRANCH="${{ inputs.rascal_version }}" -DTYPEPAL_BRANCH="${{ inputs.typepal_version }}" -DRASCAL_ALL_BRANCH="${{ inputs.rascal_version }}" -Xmx500m -jar ${{ runner.temp }}/rascal.jar Main \
+          java -DRASCAL_BRANCH="${{ inputs.rascal_version }}" -DTYPEPAL_BRANCH="${{ case(inputs.typepal_version != '', inputs.typepal_version, steps.read-pom.outputs.typepal_version) }}" -DRASCAL_ALL_BRANCH="${{ inputs.rascal_version }}" -Xmx500m -jar ${{ runner.temp }}/rascal.jar Main \
             --libs "${{ inputs.dependencies_on_lib_path }}" \
             --maxCores 4 \
             --memory 12G \
