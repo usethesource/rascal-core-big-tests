@@ -97,7 +97,7 @@ jobs:
         env:
           JAVA_TOOL_OPTIONS: "-Djava.io.tmpdir=${{ runner.temp }}"
         run: |
-          java -DRASCAL_BRANCH="${{ inputs.rascal_version }}" -DTYPEPAL_BRANCH="${{ case(inputs.typepal_version != '', inputs.typepal_version, steps.read-pom.outputs.typepal_version) }}" -DRASCAL_ALL_BRANCH="${{ inputs.rascal_version }}" -Xmx500m -jar ${{ runner.temp }}/rascal.jar Main \
+          java -DRASCAL_BRANCH="${{ inputs.rascal_version }}" -DTYPEPAL_BRANCH="${{ case(inputs.typepal_version != '', inputs.typepal_version, format('v{0}', steps.read-pom.outputs.typepal_version)) }}" -DRASCAL_ALL_BRANCH="${{ inputs.rascal_version }}" -Xmx500m -jar ${{ runner.temp }}/rascal.jar Main \
             --libs "${{ inputs.dependencies_on_lib_path }}" \
             --maxCores 4 \
             --memory 12G \
