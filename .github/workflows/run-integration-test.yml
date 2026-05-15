@@ -10,7 +10,7 @@ on:
 
       typepal_version:
         description: 'typepal branch/tag to checkout (leave empty to read from POM)'
-        required: true
+        required: false
         default: ''
 
       dependencies_on_lib_path:
