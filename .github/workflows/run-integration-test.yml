@@ -102,7 +102,7 @@ jobs:
             --libs "${{ inputs.dependencies_on_lib_path }}" \
             --maxCores 4 \
             --memory 12G \
-            --rascalVersion "|file:///${{ runner.temp }}/rascal.jar|" \
+            --rascalJar "|file:///${{ runner.temp }}/rascal.jar|" \
             --repoFolder "|cwd:///repos|" \
             --full false \
             --clean \

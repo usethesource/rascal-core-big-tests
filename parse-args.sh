@@ -24,7 +24,7 @@ while getopts ":hsfd:r:c:t:" opt; do
       BIG_DIR="${OPTARG}"
       ;;
     r)
-      EXTRA_ARGS+="--rascalVersion |file:///${OPTARG}| "
+      EXTRA_ARGS+="--rascalJar |file:///${OPTARG}| "
       RASCAL_JAR="${OPTARG}"
       ;;
     c)

@@ -186,7 +186,7 @@ int main(
     bool full=true, // do a full clone
     bool clean=true, // do a clean of the to build folders
     loc repoFolder = |tmp:///repo/|,
-    loc rascalVersion=|home:///.m2/repository/org/rascalmpl/rascal/0.41.0-RC46/rascal-0.41.0-RC46.jar|,
+    loc rascalJar=|home:///.m2/repository/org/rascalmpl/rascal/0.41.0-RC46/rascal-0.41.0-RC46.jar|,
     set[str] tests = {/*all*/}
     ) {
 
@@ -256,11 +256,11 @@ int main(
         sourceFiles = [f | f <- rascalFiles, !isIgnored(f, p.ignores)];
         testModules = sort([mname | f <- rascalFiles, str mname := getModuleName(f, p), any(pref <- proj.testPrefixes, startsWith(mname, pref))]);
 
-        result += run("org.rascalmpl.shell.RascalCompile", n, rProjectRoot, p, sourceFiles, memory, rascalVersion, extraArgs = [*addParallelFlags(proj, sourceFiles, maxCores), "-modules", *[ "<f>" | f <- sourceFiles]]);
+        result += run("org.rascalmpl.shell.RascalCompile", n, rProjectRoot, p, sourceFiles, memory, rascalJar, extraArgs = [*addParallelFlags(proj, sourceFiles, maxCores), "-modules", *[ "<f>" | f <- sourceFiles]]);
         if (package) {
-            result += run("org.rascalmpl.shell.RascalPackage", n, rProjectRoot, p, sourceFiles, memory, rascalVersion, extraArgs = ["-sourceLookup", "<rascalVersion>", "-relocatedClasses", "<resolve(rProjectRoot, packageTarget)>"]);
+            result += run("org.rascalmpl.shell.RascalPackage", n, rProjectRoot, p, sourceFiles, memory, rascalJar, extraArgs = ["-sourceLookup", "<rascalJar>", "-relocatedClasses", "<resolve(rProjectRoot, packageTarget)>"]);
         }
-        result += runTests(testModules, rascalVersion, repoFolder, n, proj, p, pcfgs);
+        result += runTests(testModules, rascalJar, repoFolder, n, proj, p, pcfgs);
     }
     println("******\nDone running ");
     for (p <- toSet(stats.project)) {
@@ -295,7 +295,7 @@ loc copyAndRename(loc fromLoc, loc toFolder, str newName, str oldName = "TestWra
     return dest;
 }
 
-int runTests(list[str] testModules, loc rascalVersion, loc repoFolder, str projectName, Project proj, PathConfig pcfg, lrel[str, PathConfig] pcfgs) {
+int runTests(list[str] testModules, loc rascalJar, loc repoFolder, str projectName, Project proj, PathConfig pcfg, lrel[str, PathConfig] pcfgs) {
     int code = 0;
     if ({} !:= proj.testPrefixes) {
         println("*** Starting: test runner on <projectName> (<size(testModules)>)");
@@ -310,7 +310,7 @@ int runTests(list[str] testModules, loc rascalVersion, loc repoFolder, str proje
 
         startTime = realTime();
         try {
-            pid = createProcess("java", args = ["-jar", buildFSPath(rascalVersion), testWrapperName, "--testModules", intercalate(",", testModules)], workingDir = projectRoot(repoFolder, projectName, proj), envVars = envVars);
+            pid = createProcess("java", args = ["-jar", buildFSPath(rascalJar), testWrapperName, "--testModules", intercalate(",", testModules)], workingDir = projectRoot(repoFolder, projectName, proj), envVars = envVars);
             code = awaitProcess(pid);
         } catch e: {
             throw e;
@@ -332,7 +332,7 @@ int run(
     PathConfig pcfg,
     list[loc] rascalFiles,
     str memory,
-    loc rascalVersion,
+    loc rascalJar,
     list[str] extraArgs = []
 ) {
     result = 0;
@@ -341,7 +341,7 @@ int run(
     runner = createProcess("java", args=[
         "-Xmx<memory>",
         "-Drascal.monitor.batch", // disable fancy progress bar
-        "-cp", buildFSPath(rascalVersion),
+        "-cp", buildFSPath(rascalJar),
         class,
         "-projectRoot", "<resolvedRoot>",
         "-srcs", *[ "<s>" | s <- pcfg.srcs],
