@@ -4,20 +4,20 @@ on:
   workflow_dispatch:
     inputs:
       rascal_branch_build:
-        description: 'rascal branch/tag (to build jar)'
+        description: 'rascal branch/tag to build jar'
         required: true
         default: 'main'
 
       typepal_branch_build:
-        description: 'typepal branch/tag (to build jar). Default: version in pom.xml.'
+        description: 'typepal branch/tag to build jar. Default: version in pom.xml.'
         required: false
 
       rascal_branch_check:
-        description: 'rascal branch/tag (to be typechecked). Default: `main`.'
+        description: 'rascal branch/tag to be typechecked (standard library). Default: `main`.'
         required: false
 
       typepal_branch_check:
-        description: 'typepal branch/tag (to be typechecked). Default: `main`.'
+        description: 'typepal branch/tag to be typechecked. Default: `main`.'
         required: false
 
       dependencies_on_lib_path:
