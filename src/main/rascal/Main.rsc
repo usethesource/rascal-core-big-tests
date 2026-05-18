@@ -47,8 +47,8 @@ Projects projects = {
         branch=(getSystemProperties()["TYPEPAL_ALL_BRANCH"] ? "main"),
         // This project is needed only to checkout `typepal` and copy the
         // sources to `rascal-all` (independent of the regular `typepal` repo,
-        // which may be on a different branch), so exclude all sources here:
-        srcs = [])>,
+        // which may be on a different branch), so ignore all sources here:
+        ignores = {"analysis/typepal", "examples"})>,
     <"typepal-boot", project(|https://github.com/usethesource/typepal.git|, {}, rascalLib=true, ignores={"examples"})>,
     <"salix-core", project(|https://github.com/usethesource/salix-core.git|, {"rascal"})>,
     <"clair", project(|https://github.com/usethesource/clair.git|, {"rascal"})>,
