@@ -44,7 +44,7 @@ Projects projects = {
         branch=(getSystemProperties()["TYPEPAL_BRANCH"] ? "main"),
         ignores={"examples"})>,
     <"typepal-copy", project(|https://github.com/usethesource/typepal.git|, {},
-        branch=(getSystemProperties()["TYPEPAL_ALL_BRANCH"] ? "main"),
+        branch=(getSystemProperties()["TYPEPAL_COPY_BRANCH"] ? "main"),
         // This project is needed only to checkout `typepal` and copy the
         // sources to `rascal-all` (independent of the regular `typepal` repo,
         // which may be on a different branch), so ignore all sources here:

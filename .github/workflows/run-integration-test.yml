@@ -129,12 +129,12 @@ jobs:
         # tests, that version needs to be read in Rascal's `pom.xml`.
         run: |
           version=$(mvn dependency:list | grep typepal | sed 's/.*org.rascalmpl:typepal:jar:\(.*\):.*/\1/')
-          echo "TYPEPAL_ALL_BRANCH=v$version" >> "$GITHUB_ENV"
+          echo "TYPEPAL_COPY_BRANCH=v$version" >> "$GITHUB_ENV"
         working-directory: deps/rascal
 
       - name: Set typepal branch to be typechecked in the ...-all tests (overriding default)
         if: ${{ inputs.typepal_branch_build != ''}}
-        run: echo "TYPEPAL_ALL_BRANCH=${{ inputs.typepal_branch_build }}" >> "$GITHUB_ENV"
+        run: echo "TYPEPAL_COPY_BRANCH=${{ inputs.typepal_branch_build }}" >> "$GITHUB_ENV"
 
       - name: Compile rascal java
         run: mvn -B clean compile package -Drascal.tutor.skip -DskipTests -Drascal.compile.skip -Drascal.package.skip
