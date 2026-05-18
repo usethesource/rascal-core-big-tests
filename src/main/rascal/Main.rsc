@@ -196,6 +196,9 @@ int main(
     set[str] tests = {/*all*/}
     ) {
 
+    println("System properties:");
+    iprintln(getSystemProperties());
+
     repoFolder = resolveLocation(repoFolder); // get rid of any relative schemes
 
     loc getProjectLoc(str projectName) {
