@@ -30,21 +30,21 @@ alias Projects = rel[str name, Project config];
 
 Projects projects = {
     <"rascal", project(|https://github.com/usethesource/rascal.git|, {},
-        branch=(getSystemProperties()["RASCAL_BRANCH"] ? "main"),
+        branch=(getSystemEnvironment()["RASCAL_BRANCH"] ? "main"),
         srcs = ["src/org/rascalmpl/library"],
         ignores={"experiments", "resource", "lang/rascal/tests", "lang/rascal/syntax/tests", "lang/rascal/grammar/tests"},
         parallel = true,
         parallelPreCheck = {"src/org/rascalmpl/library/Prelude.rsc"})>,
     <"rascal-all", project(|https://github.com/usethesource/rascal.git|, {"typepal-copy"}, // Dependency to ensure the right `typepal` sources are available
-        branch=(getSystemProperties()["RASCAL_ALL_BRANCH"] ? "main"),
+        branch=(getSystemEnvironment()["RASCAL_ALL_BRANCH"] ? "main"),
         ignores={"lang/rascal/tutor/examples", "NestedOr.rsc"},
         parallel = true,
         parallelPreCheck = {"src/org/rascalmpl/library/Prelude.rsc", "src/org/rascalmpl/compiler/lang/rascalcore/check/CheckerCommon.rsc"})>,
     <"typepal", project(|https://github.com/usethesource/typepal.git|, {"rascal"},
-        branch=(getSystemProperties()["TYPEPAL_BRANCH"] ? "main"),
+        branch=(getSystemEnvironment()["TYPEPAL_BRANCH"] ? "main"),
         ignores={"examples"})>,
     <"typepal-copy", project(|https://github.com/usethesource/typepal.git|, {},
-        branch=(getSystemProperties()["TYPEPAL_COPY_BRANCH"] ? "main"),
+        branch=(getSystemEnvironment()["TYPEPAL_COPY_BRANCH"] ? "main"),
         // This project is needed only to checkout `typepal` and copy the
         // sources to `rascal-all` (independent of the regular `typepal` repo,
         // which may be on a different branch), so ignore all sources here:
@@ -195,9 +195,6 @@ int main(
     loc rascalJar=|home:///.m2/repository/org/rascalmpl/rascal/0.41.0-RC46/rascal-0.41.0-RC46.jar|,
     set[str] tests = {/*all*/}
     ) {
-
-    println("System properties:");
-    iprintln(getSystemProperties());
 
     repoFolder = resolveLocation(repoFolder); // get rid of any relative schemes
 
