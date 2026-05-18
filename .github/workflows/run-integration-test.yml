@@ -96,6 +96,10 @@ jobs:
         working-directory: deps/typepal
 
       - name: Write typepal dependency version to build jar (overriding pom.xml)
+        # In most cases, this step isn't needed as pom.xml normally points to
+        # the intended dependency version of Typepal already. A case when it
+        # could be useful is to test the effect of new changes in a non-`main`
+        # branch of Typepal on Rascal before merging it into `main`.
         if: ${{ inputs.typepal_branch_build != '' }}
         run: |
           mvn -B versions:use-dep-version \
