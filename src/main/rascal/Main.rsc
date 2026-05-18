@@ -150,12 +150,12 @@ int updateRepos(Projects projs, loc repoFolder, bool full) {
     for (<n, proj> <- projs) {
         targetFolder = repoFolder + n;
         if (exists(targetFolder)) {
-            println("**** Updating <n>");
+            println("**** Updating <n> (branch/tag: <proj.branch>)");
             checkOutput("fetch", execWithCode("git", args=["fetch"], workingDir=targetFolder));
             checkOutput("reset", execWithCode("git", args=["reset", "--hard", "<proj.branch>"], workingDir=targetFolder));
         }
         else {
-            println("**** Cloning <n>");
+            println("**** Cloning <n> (branch/tag: <proj.branch>)");
             extraArgs = full ? [] : ["--single-branch", "--branch", proj.branch, "--depth", "1"];
             checkOutput("clone", execWithCode("git", args=["clone", *extraArgs, proj.repo.uri, n], workingDir=repoFolder));
         }
