@@ -110,7 +110,7 @@ jobs:
 
       - name: Set rascal branch to be typechecked (overriding default)
         if: ${{ inputs.rascal_branch_check != ''}}
-        run: echo "RASCAL_BRANCH=${{ inputs.rascal_branch }}" >> "$GITHUB_ENV"
+        run: echo "RASCAL_BRANCH=${{ inputs.rascal_branch_check }}" >> "$GITHUB_ENV"
 
       - name: Set typepal branch to be typechecked (overriding default)
         if: ${{ inputs.typepal_branch_check != ''}}
