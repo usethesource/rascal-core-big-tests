@@ -260,6 +260,11 @@ int main(
         rProjectRoot = resolveLocation(projectRoot);
         rascalFiles = sort([*find(s, "rsc") | s <- p.srcs, (startsWith(s.path, projectRoot.path) || startsWith(s.path, rProjectRoot.path))]);
         sourceFiles = [f | f <- rascalFiles, !isIgnored(f, p.ignores)];
+        if ([] == sourceFiles) {
+            println("No source files. Skipping compilation and packaging.");
+            continue;
+        }
+
         testModules = sort([mname | f <- rascalFiles, str mname := getModuleName(f, p), any(pref <- proj.testPrefixes, startsWith(mname, pref))]);
 
         result += run("org.rascalmpl.shell.RascalCompile", n, rProjectRoot, p, sourceFiles, memory, rascalJar, extraArgs = [*addParallelFlags(proj, sourceFiles, maxCores), "-modules", *[ "<f>" | f <- sourceFiles]]);
