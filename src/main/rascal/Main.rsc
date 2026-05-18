@@ -35,7 +35,7 @@ Projects projects = {
         ignores={"experiments", "resource", "lang/rascal/tests", "lang/rascal/syntax/tests", "lang/rascal/grammar/tests"},
         parallel = true,
         parallelPreCheck = {"src/org/rascalmpl/library/Prelude.rsc"})>,
-    <"rascal-all", project(|https://github.com/usethesource/rascal.git|, {"typepal-all"}, // Dependency to ensure the right `typepal` sources are available
+    <"rascal-all", project(|https://github.com/usethesource/rascal.git|, {"typepal-copy"}, // Dependency to ensure the right `typepal` sources are available
         branch=(getSystemProperties()["RASCAL_ALL_BRANCH"] ? "main"),
         ignores={"lang/rascal/tutor/examples", "NestedOr.rsc"},
         parallel = true,
@@ -43,7 +43,7 @@ Projects projects = {
     <"typepal", project(|https://github.com/usethesource/typepal.git|, {"rascal"},
         branch=(getSystemProperties()["TYPEPAL_BRANCH"] ? "main"),
         ignores={"examples"})>,
-    <"typepal-all", project(|https://github.com/usethesource/typepal.git|, {},
+    <"typepal-copy", project(|https://github.com/usethesource/typepal.git|, {},
         branch=(getSystemProperties()["TYPEPAL_ALL_BRANCH"] ? "main"),
         // This project is needed only to checkout `typepal` and copy the
         // sources to `rascal-all` (independent of the regular `typepal` repo,
@@ -93,7 +93,7 @@ tuple[list[loc], list[loc]] calcSourcePaths(str name, Project proj, loc repoFold
     if (name == "rascal-all") {
         // To be able to access typepal in rascal-all (and rascal-lsp-all) without bootstrapping issues, we copy typepal sources and put them on our src path
         tpSources = repoFolder + "rascal-all/src/org/rascalmpl/typepal";
-        copy(getProjectLoc("typepal-all") + "src/analysis/typepal", tpSources + "analysis/typepal", recursive=true);
+        copy(getProjectLoc("typepal-copy") + "src/analysis/typepal", tpSources + "analysis/typepal", recursive=true);
         srcs = [src | src <- srcs, !(src.scheme == "mvn" && startsWith(src.authority, "org.rascalmpl--typepal"))] + resolveLocation(tpSources);
     }
     ignores = [ s + i |  s <- srcs, s.scheme != "jar+file",  i <- proj.ignores];
