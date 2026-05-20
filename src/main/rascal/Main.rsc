@@ -29,22 +29,39 @@ data Project
 alias Projects = rel[str name, Project config];
 
 Projects projects = {
-    <"rascal", project(|https://github.com/usethesource/rascal.git|, {}, srcs = ["src/org/rascalmpl/library"], ignores={"experiments", "resource", "lang/rascal/tests", "lang/rascal/syntax/tests", "lang/rascal/grammar/tests"}, parallel = true, parallelPreCheck = {"src/org/rascalmpl/library/Prelude.rsc"})>,
-    <"rascal-all", project(|https://github.com/usethesource/rascal.git|, {}, branch=(getSystemProperties()["RASCAL_ALL_BRANCH"] ? "main"), ignores={"lang/rascal/tutor/examples", "NestedOr.rsc"}, parallel = true, parallelPreCheck = {"src/org/rascalmpl/library/Prelude.rsc", "src/org/rascalmpl/compiler/lang/rascalcore/check/CheckerCommon.rsc"})>,
-    <"typepal", project(|https://github.com/usethesource/typepal.git|, {"rascal"}, ignores={"examples"})>,
+    <"rascal-stdlib", project(|https://github.com/usethesource/rascal.git|, {},
+        branch=(getSystemEnvironment()["RASCAL_BRANCH"] ? "main"),
+        srcs = ["src/org/rascalmpl/library"],
+        ignores={"experiments", "resource", "lang/rascal/tests", "lang/rascal/syntax/tests", "lang/rascal/grammar/tests"},
+        parallel = true,
+        parallelPreCheck = {"src/org/rascalmpl/library/Prelude.rsc"})>,
+    <"rascal-all", project(|https://github.com/usethesource/rascal.git|, {"typepal-copy"}, // Dependency to ensure the right `typepal` sources are available
+        branch=(getSystemEnvironment()["RASCAL_ALL_BRANCH"] ? "main"),
+        ignores={"lang/rascal/tutor/examples", "NestedOr.rsc"},
+        parallel = true,
+        parallelPreCheck = {"src/org/rascalmpl/library/Prelude.rsc", "src/org/rascalmpl/compiler/lang/rascalcore/check/CheckerCommon.rsc"})>,
+    <"typepal", project(|https://github.com/usethesource/typepal.git|, {"rascal-stdlib"},
+        branch=(getSystemEnvironment()["TYPEPAL_BRANCH"] ? "main"),
+        ignores={"examples"})>,
+    <"typepal-copy", project(|https://github.com/usethesource/typepal.git|, {},
+        branch=(getSystemEnvironment()["TYPEPAL_COPY_BRANCH"] ? "main"),
+        // This project is needed only to checkout `typepal` and copy the
+        // sources to `rascal-all` (independent of the regular `typepal` repo,
+        // which may be on a different branch), so ignore all sources here:
+        ignores = {"analysis/typepal", "examples"})>,
     <"typepal-boot", project(|https://github.com/usethesource/typepal.git|, {}, rascalLib=true, ignores={"examples"})>,
-    <"salix-core", project(|https://github.com/usethesource/salix-core.git|, {"rascal"})>,
-    <"clair", project(|https://github.com/usethesource/clair.git|, {"rascal"})>,
-    <"java-air", project(|https://github.com/usethesource/java-air.git|, {"rascal"})>,
-    <"rascal-lucene", project(|https://github.com/usethesource/rascal-lucene.git|, {"rascal"})>,
-    <"python-air", project(|https://github.com/cwi-swat/python-air.git|, {"rascal"})>,
-    <"salix-contrib", project(|https://github.com/usethesource/salix-contrib.git|, {"rascal", "salix-core"})>,
-    <"flybytes", project(|https://github.com/usethesource/flybytes.git|, {"rascal"})>,
-    <"drambiguity", project(|https://github.com/cwi-swat/drambiguity.git|, {"rascal", "salix-core"})>,
-    <"rascal-git", project(|https://github.com/cwi-swat/rascal-git.git|, {"rascal"})>,
-    <"php-analysis", project(|https://github.com/cwi-swat/php-analysis.git|, {"rascal", "rascal-git"}, srcs=["src/main/rascal"])>,
-    <"rascal-lsp-all", project(|https://github.com/usethesource/rascal-language-servers.git|, {"rascal-all"}, subdir="rascal-lsp", srcs=["src/main/rascal/library","src/main/rascal/lsp"])>,
-    <"rascal-lsp", project(|https://github.com/usethesource/rascal-language-servers.git|, {"rascal", "typepal"}, srcs=["src/main/rascal/library", "src/main/rascal/lsp"], ignores = {"lang/rascal/lsp/refactor", "lang/rascal/tests/rename", "lang/rascal/lsp/IDECheckerWrapper.rsc"}, subdir="rascal-lsp", testPrefixes={"lang::rascal::tests::rename"})>
+    <"salix-core", project(|https://github.com/usethesource/salix-core.git|, {"rascal-stdlib"})>,
+    <"clair", project(|https://github.com/usethesource/clair.git|, {"rascal-stdlib"})>,
+    <"java-air", project(|https://github.com/usethesource/java-air.git|, {"rascal-stdlib"})>,
+    <"rascal-lucene", project(|https://github.com/usethesource/rascal-lucene.git|, {"rascal-stdlib"})>,
+    <"python-air", project(|https://github.com/cwi-swat/python-air.git|, {"rascal-stdlib"})>,
+    <"salix-contrib", project(|https://github.com/usethesource/salix-contrib.git|, {"rascal-stdlib", "salix-core"})>,
+    <"flybytes", project(|https://github.com/usethesource/flybytes.git|, {"rascal-stdlib"})>,
+    <"drambiguity", project(|https://github.com/cwi-swat/drambiguity.git|, {"rascal-stdlib", "salix-core"})>,
+    <"rascal-git", project(|https://github.com/cwi-swat/rascal-git.git|, {"rascal-stdlib"})>,
+    <"php-analysis", project(|https://github.com/cwi-swat/php-analysis.git|, {"rascal-stdlib", "rascal-git"}, srcs=["src/main/rascal"])>,
+    <"rascal-lsp-all", project(|https://github.com/usethesource/rascal-language-servers.git|, {"rascal-all"}, branch=(getSystemEnvironment()["RASCAL_LSP_ALL_BRANCH"] ? "main"), subdir="rascal-lsp", srcs=["src/main/rascal/library","src/main/rascal/lsp"])>,
+    <"rascal-lsp", project(|https://github.com/usethesource/rascal-language-servers.git|, {"rascal-stdlib", "typepal"}, srcs=["src/main/rascal/library", "src/main/rascal/lsp"], ignores = {"lang/rascal/lsp/refactor", "lang/rascal/tests/rename", "lang/rascal/lsp/IDECheckerWrapper.rsc"}, subdir="rascal-lsp", testPrefixes={"lang::rascal::tests::rename"})>
 };
 
 bool isWindows = /win/i := getSystemProperty("os.name");
@@ -76,7 +93,7 @@ tuple[list[loc], list[loc]] calcSourcePaths(str name, Project proj, loc repoFold
     if (name == "rascal-all") {
         // To be able to access typepal in rascal-all (and rascal-lsp-all) without bootstrapping issues, we copy typepal sources and put them on our src path
         tpSources = repoFolder + "rascal-all/src/org/rascalmpl/typepal";
-        copy(getProjectLoc("typepal") + "src/analysis/typepal", tpSources + "analysis/typepal", recursive=true);
+        copy(getProjectLoc("typepal-copy") + "src/analysis/typepal", tpSources + "analysis/typepal", recursive=true);
         srcs = [src | src <- srcs, !(src.scheme == "mvn" && startsWith(src.authority, "org.rascalmpl--typepal"))] + resolveLocation(tpSources);
     }
     ignores = [ s + i |  s <- srcs, s.scheme != "jar+file",  i <- proj.ignores];
@@ -133,12 +150,12 @@ int updateRepos(Projects projs, loc repoFolder, bool full) {
     for (<n, proj> <- projs) {
         targetFolder = repoFolder + n;
         if (exists(targetFolder)) {
-            println("**** Updating <n>");
+            println("**** Updating <n> (branch/tag: <proj.branch>)");
             checkOutput("fetch", execWithCode("git", args=["fetch"], workingDir=targetFolder));
-            checkOutput("reset", execWithCode("git", args=["reset", "--hard", "origin/<proj.branch>"], workingDir=targetFolder));
+            checkOutput("reset", execWithCode("git", args=["reset", "--hard", "<proj.branch>"], workingDir=targetFolder));
         }
         else {
-            println("**** Cloning <n>");
+            println("**** Cloning <n> (branch/tag: <proj.branch>)");
             extraArgs = full ? [] : ["--single-branch", "--branch", proj.branch, "--depth", "1"];
             checkOutput("clone", execWithCode("git", args=["clone", *extraArgs, proj.repo.uri, n], workingDir=repoFolder));
         }
@@ -175,7 +192,7 @@ int main(
     bool full=true, // do a full clone
     bool clean=true, // do a clean of the to build folders
     loc repoFolder = |tmp:///repo/|,
-    loc rascalVersion=|home:///.m2/repository/org/rascalmpl/rascal/0.41.0-RC46/rascal-0.41.0-RC46.jar|,
+    loc rascalJar=|home:///.m2/repository/org/rascalmpl/rascal/0.41.0-RC46/rascal-0.41.0-RC46.jar|,
     set[str] tests = {/*all*/}
     ) {
 
@@ -243,13 +260,18 @@ int main(
         rProjectRoot = resolveLocation(projectRoot);
         rascalFiles = sort([*find(s, "rsc") | s <- p.srcs, (startsWith(s.path, projectRoot.path) || startsWith(s.path, rProjectRoot.path))]);
         sourceFiles = [f | f <- rascalFiles, !isIgnored(f, p.ignores)];
+        if ([] == sourceFiles) {
+            println("No source files. Skipping compilation and packaging.");
+            continue;
+        }
+
         testModules = sort([mname | f <- rascalFiles, str mname := getModuleName(f, p), any(pref <- proj.testPrefixes, startsWith(mname, pref))]);
 
-        result += run("org.rascalmpl.shell.RascalCompile", n, rProjectRoot, p, sourceFiles, memory, rascalVersion, extraArgs = [*addParallelFlags(proj, sourceFiles, maxCores), "-modules", *[ "<f>" | f <- sourceFiles]]);
+        result += run("org.rascalmpl.shell.RascalCompile", n, rProjectRoot, p, sourceFiles, memory, rascalJar, extraArgs = [*addParallelFlags(proj, sourceFiles, maxCores), "-modules", *[ "<f>" | f <- sourceFiles]]);
         if (package) {
-            result += run("org.rascalmpl.shell.RascalPackage", n, rProjectRoot, p, sourceFiles, memory, rascalVersion, extraArgs = ["-sourceLookup", "<rascalVersion>", "-relocatedClasses", "<resolve(rProjectRoot, packageTarget)>"]);
+            result += run("org.rascalmpl.shell.RascalPackage", n, rProjectRoot, p, sourceFiles, memory, rascalJar, extraArgs = ["-sourceLookup", "<rascalJar>", "-relocatedClasses", "<resolve(rProjectRoot, packageTarget)>"]);
         }
-        result += runTests(testModules, rascalVersion, repoFolder, n, proj, p, pcfgs);
+        result += runTests(testModules, rascalJar, repoFolder, n, proj, p, pcfgs);
     }
     println("******\nDone running ");
     for (p <- toSet(stats.project)) {
@@ -284,7 +306,7 @@ loc copyAndRename(loc fromLoc, loc toFolder, str newName, str oldName = "TestWra
     return dest;
 }
 
-int runTests(list[str] testModules, loc rascalVersion, loc repoFolder, str projectName, Project proj, PathConfig pcfg, lrel[str, PathConfig] pcfgs) {
+int runTests(list[str] testModules, loc rascalJar, loc repoFolder, str projectName, Project proj, PathConfig pcfg, lrel[str, PathConfig] pcfgs) {
     int code = 0;
     if ({} !:= proj.testPrefixes) {
         println("*** Starting: test runner on <projectName> (<size(testModules)>)");
@@ -295,11 +317,11 @@ int runTests(list[str] testModules, loc rascalVersion, loc repoFolder, str proje
         testWrapperDest = copyAndRename(testWrapperLocation, destDir, testWrapperName);
 
         // Prepare environment
-        envVars = ("ADDITIONAL_TPLS": "<resolveLocation(rpcfg.bin)>" | rpcfg <- pcfgs["rascal"]);
+        envVars = ("ADDITIONAL_TPLS": "<resolveLocation(rpcfg.bin)>" | rpcfg <- pcfgs["rascal-stdlib"]);
 
         startTime = realTime();
         try {
-            pid = createProcess("java", args = ["-jar", buildFSPath(rascalVersion), testWrapperName, "--testModules", intercalate(",", testModules)], workingDir = projectRoot(repoFolder, projectName, proj), envVars = envVars);
+            pid = createProcess("java", args = ["-jar", buildFSPath(rascalJar), testWrapperName, "--testModules", intercalate(",", testModules)], workingDir = projectRoot(repoFolder, projectName, proj), envVars = envVars);
             code = awaitProcess(pid);
         } catch e: {
             throw e;
@@ -321,7 +343,7 @@ int run(
     PathConfig pcfg,
     list[loc] rascalFiles,
     str memory,
-    loc rascalVersion,
+    loc rascalJar,
     list[str] extraArgs = []
 ) {
     result = 0;
@@ -330,7 +352,7 @@ int run(
     runner = createProcess("java", args=[
         "-Xmx<memory>",
         "-Drascal.monitor.batch", // disable fancy progress bar
-        "-cp", buildFSPath(rascalVersion),
+        "-cp", buildFSPath(rascalJar),
         class,
         "-projectRoot", "<resolvedRoot>",
         "-srcs", *[ "<s>" | s <- pcfg.srcs],

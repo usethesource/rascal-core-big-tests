@@ -1,12 +1,29 @@
 name: Integration Test
-run-name: Testing ${{ inputs.rascal_version }}
+run-name: Testing rascal:`${{ inputs.rascal_branch_build }}` with typepal${{ case(inputs.typepal_branch_build != '', format(':`{0}`', inputs.typepal_branch_build), ' version from `rascal/pom.xml`') }}
 on:
   workflow_dispatch:
     inputs:
-      rascal_version:
-        description: 'rascal branch/tag to checkout'
+      rascal_branch_build:
+        description: 'rascal branch/tag to build jar'
         required: true
         default: 'main'
+
+      typepal_branch_build:
+        description: 'typepal branch/tag to build jar. Default: version in rascal/pom.xml.'
+        required: false
+
+      rascal_branch_check:
+        description: 'rascal branch/tag to be typechecked (standard library). Default: configured in Main.rsc.'
+        required: false
+
+      typepal_branch_check:
+        description: 'typepal branch/tag to be typechecked. Default: configured in Main.rsc.'
+        required: false
+
+      rascal_lsp_all_branch_check:
+        description: 'rascal-lsp-all branch/tag to be typechecked. Default: configured in Main.rsc.'
+        required: false
+
       dependencies_on_lib_path:
         description: 'Put tpls of dependencies on lib path'
         required: true
@@ -31,16 +48,24 @@ jobs:
     strategy:
       matrix:
         target:
-          - "'rascal' 'flybytes' 'salix-core' 'salix-contrib' 'drambiguity' 'rascal-lsp' 'rascal-git' 'php-analysis' 'typepal' 'clair' 'java-air' 'python-air' 'rascal-lucene'"
-          - "'rascal-all' 'rascal-lsp-all'"
+          - "'rascal-stdlib' 'flybytes' 'salix-core' 'salix-contrib' 'drambiguity' 'rascal-lsp' 'rascal-git' 'php-analysis' 'typepal' 'clair' 'java-air' 'python-air' 'rascal-lucene'"
+          - "'typepal-copy' 'rascal-all' 'rascal-lsp-all'"
       fail-fast: false
     steps:
       - uses: actions/checkout@v4
-        name: 'Checkout rascal (${{ inputs.rascal_version }})'
+        name: 'Checkout rascal (${{ inputs.rascal_branch_build }})'
         with:
           repository: 'usethesource/rascal'
-          ref: ${{ inputs.rascal_version }}
+          ref: ${{ inputs.rascal_branch_build }}
           path: 'deps/rascal'
+
+      - uses: actions/checkout@v4
+        if: ${{ inputs.typepal_branch_build != '' }}
+        name: 'Checkout typepal (${{ inputs.typepal_branch_build }})'
+        with:
+          repository: 'usethesource/typepal'
+          ref: ${{ inputs.typepal_branch_build }}
+          path: 'deps/typepal'
 
       - uses: s4u/maven-settings-action@v3.1.0
         if: ${{ env.IS_OWN_PR != '' }}
@@ -54,9 +79,56 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
           cache-dependency-path: 'deps/rascal/pom.xml'
+
+      # If a Typepal branch/tag to build `rascal.jar` **isn't** provided, then
+      # the following three steps are skipped, and a Typepal dependency version
+      # is installed and used based on Rascal's `pom.xml`. If it **is**
+      # provided, then that branch/tag is installed. To ensure it is also used,
+      # Rascal's `pom.xml` needs to be updated to refer to the installed Typepal
+      # dependency version (otherwise, silently, the dependency version in
+      # Rascal's `pom.xml` is still used).
+
+      - name: Prepare custom typepal dependency
+        id: typepal-override
+        if: ${{ inputs.typepal_branch_build != '' }}
+        run: |
+          mvn -B install -Drascal.tutor.skip -DskipTests -Drascal.compile.skip -Drascal.package.skip
+          # read the typepal version so we can update the pom.xml
+          echo "typepal_dep_version=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)" >> "$GITHUB_OUTPUT"
+          # and setup the branch name for the integration test
+          echo "TYPEPAL_COPY_BRANCH=${{ inputs.typepal_branch_build }}" >> "$GITHUB_ENV"
+        working-directory: deps/typepal
+
+      - name: Overwrite typepal dependency in rascal/pom.xml
+        # In most cases, this step isn't needed as pom.xml normally points to
+        # the intended dependency version of Typepal already. A case when it
+        # could be useful is to test the effect of new changes in a non-`main`
+        # branch of Typepal on Rascal before merging it into `main`.
+        if: ${{ inputs.typepal_branch_build != '' }}
+        run: |
+          mvn -B versions:use-dep-version \
+            -Dincludes=org.rascalmpl:typepal \
+            -DdepVersion=${{ steps.typepal-override.outputs.typepal_dep_version }} \
+            -DforceVersion=true
+        working-directory: deps/rascal
+
+      # in most cases, if typepal isn't changed, we read it from the pom.xml, to know which version to user
+      - name: Infer typepal branch to be used in the ...-all tests
+        if: ${{ inputs.typepal_branch_build == ''}}
+        # If a Typepal branch/tag to build `rascal.jar` **isn't** provided, then
+        # a Typepal dependency version has been installed and used based on
+        # Rascal's `pom.xml`. To typecheck the same version in the ...-all
+        # tests, that version needs to be read in Rascal's `pom.xml`.
+        run: |
+          version=$(mvn dependency:list | grep typepal | sed 's/.*org.rascalmpl:typepal:jar:\(.*\):.*/\1/')
+          echo "TYPEPAL_COPY_BRANCH=v$version" >> "$GITHUB_ENV"
+        working-directory: deps/rascal
+
+
       - name: Compile rascal java
         run: mvn -B clean compile package -Drascal.tutor.skip -DskipTests -Drascal.compile.skip -Drascal.package.skip
         working-directory: deps/rascal
+
       - name: copy rascal jar to predictable location and cleanup
         run: |
           rm deps/rascal/target/*-sources.jar
@@ -66,16 +138,29 @@ jobs:
       - name: Checkout integration-script
         uses: actions/checkout@v4
 
+      - name: Set optional branch overrides
+        run: |
+          if [[ -n "${{ inputs.rascal_branch_check }}" ]]; then
+            echo "RASCAL_BRANCH=${{ inputs.rascal_branch_check }}" >> "$GITHUB_ENV"
+          fi
+          if [[ -n "${{ inputs.typepal_branch_check }}" ]]; then
+            echo "TYPEPAL_BRANCH=${{ inputs.typepal_branch_check }}" >> "$GITHUB_ENV"
+          fi
+          if [[ -n "${{ inputs.rascal_lsp_all_branch_check }}" ]]; then
+            echo "RASCAL_LSP_ALL_BRANCH=${{ inputs.rascal_lsp_all_branch_check }}" >> "$GITHUB_ENV"
+          fi
+
       - name: Typecheck
         if: ${{ !contains(matrix.target, 'rascal-all') || inputs.also_check_compiler }}
         env:
           JAVA_TOOL_OPTIONS: "-Djava.io.tmpdir=${{ runner.temp }}"
+          RASCAL_ALL_BRANCH: "${{ inputs.rascal_branch_build }}"
         run: |
-          java -DRASCAL_ALL_BRANCH="${{ inputs.rascal_version }}" -Xmx500m -jar ${{ runner.temp }}/rascal.jar Main \
+          java -Xmx500m -jar ${{ runner.temp }}/rascal.jar Main \
             --libs "${{ inputs.dependencies_on_lib_path }}" \
             --maxCores 4 \
             --memory 12G \
-            --rascalVersion "|file:///${{ runner.temp }}/rascal.jar|" \
+            --rascalJar "|file:///${{ runner.temp }}/rascal.jar|" \
             --repoFolder "|cwd:///repos|" \
             --full false \
             --clean \
