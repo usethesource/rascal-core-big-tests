@@ -4,9 +4,11 @@ This repo is used to run integration test on the Rascal typechecker. Its goal is
 
 To be clear, currently it's only for the typechecker:
 
-- it does not test the compiler or its generated code
-- it does not test the tpls and its compatibility. It explicitly ignores any tpls in any jars.
-- it does not test the tutor generator.
+- It does not test the compiler or its generated code.
+- It does not test the tpls and its compatibility. It explicitly ignores any tpls in any jars.
+- It does not test the tutor generator.
+
+Note: Beside typechecking, the only tests that are run are the rename tests in rascal-lsp (because they themselves run the typechecker as well).
 
 ## Scenarios
 
