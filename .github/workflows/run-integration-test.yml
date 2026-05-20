@@ -20,6 +20,11 @@ on:
         description: 'typepal branch/tag to be typechecked. Default: `main`.'
         required: false
 
+      rascal_lsp_all_branch_check:
+        description: 'rascal-lsp-all branch/tag to be typechecked. Default: `main`.'
+        default: 'main'
+        required: true
+
       dependencies_on_lib_path:
         description: 'Put tpls of dependencies on lib path'
         required: true
@@ -44,7 +49,7 @@ jobs:
     strategy:
       matrix:
         target:
-          - "'rascal' 'flybytes' 'salix-core' 'salix-contrib' 'drambiguity' 'rascal-lsp' 'rascal-git' 'php-analysis' 'typepal' 'clair' 'java-air' 'python-air' 'rascal-lucene'"
+          - "'rascal-stdlib' 'flybytes' 'salix-core' 'salix-contrib' 'drambiguity' 'rascal-lsp' 'rascal-git' 'php-analysis' 'typepal' 'clair' 'java-air' 'python-air' 'rascal-lucene'"
           - "'typepal-copy' 'rascal-all' 'rascal-lsp-all'"
       fail-fast: false
     steps:
@@ -153,6 +158,7 @@ jobs:
         if: ${{ !contains(matrix.target, 'rascal-all') || inputs.also_check_compiler }}
         env:
           JAVA_TOOL_OPTIONS: "-Djava.io.tmpdir=${{ runner.temp }}"
+          RASCAL_LSP_ALL_BRANCH: "${{ inputs.rascal_lsp_all_branch_check }}"
         run: |
           java -Xmx500m -jar ${{ runner.temp }}/rascal.jar Main \
             --libs "${{ inputs.dependencies_on_lib_path }}" \

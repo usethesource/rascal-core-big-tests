@@ -1,4 +1,59 @@
-# Rascal Integration Test
+# Rascal Typechecker Integration Test
+
+This repo is used to run integration test on the rascal typechecker. It's goal is to identify regressions with a new version of typechecker (maybe caused by interpreter/typepal/stdlib changes) in typechecking rascal code *without making any intermediate releases*. The goal is to identify issues before we're in some kind of bootstrap cycle or a regular release process.
+
+To clear, currently it's only for the typechecker:
+
+- it does not test the compiler or it's generated code
+- it does not test the tpls and it's compatibility. It explicatly ignores any tpls in any jars.
+- it does not test the tutor generator.
+
+## Scenarios
+
+The integration test has some parameters that are a bit complex to use, so this section will discuss a few common scenarios and how to use the parameters.
+
+It always start with: 
+
+> Go to "Actions" (top menu) -> "Integration Test" (left menu) -> "Run workflow" (drop-down menu).
+
+
+For every scenario there will be the following details that we care for:
+
+| asset | explained |
+|---|---|
+| typepal.jar | the typepal.jar that gets packaged into rascal.jar |
+| rascal.jar | the rascal.jar that gets build. Contains the stdlib and typechecker used |
+| rascal-stdlib | the standard lib that is typechecked and used to typecheck all the downstream libraries |
+| typepal | the typepal version that is typechecked during the typechecking of libraries |
+| typepal-copy | the typepal version that is copied into rascal-all |
+| rascal-all | the version of the rascal compiler that is typechecked by `rascal.jar` |
+| rascal-lsp-all | the version of rename code in rascal-lsp (that uses the rascal-compiler) that is typechecked by `rascal.jar` |
+
+
+
+### Changes in rascal
+
+There are changes the rascal project (in a PR) that might influence the typechecker. __It has no changes in typepal that aren't released yet__.
+
+> Only set the `rascal_branch_build` parameter to the branch you want to check
+
+Note that the typechecking of the rascal stdlib will be targeting main, while typechecking of the compiler itself will target the `rascal_branch_build`.
+
+| asset | version |
+|---|---|
+| typepal.jar | extracted from `rascal/pom.xml` in `rascal_branch_build`, is assumed to be released |
+| rascal.jar | `rascal_branch_build` |
+| rascal-stdlib | `main` |
+| typepal | `main` |
+| typepal-copy | same as `typepal.jar` |
+| rascal-all | `rascal_branch_build` |
+| rascal-lsp-all | `main` |
+
+
+### Changes in rascal&typepal
+
+There are changes in both rascal & typepal project that might influence the typechecker. 
+
 
 ## Usage
 
