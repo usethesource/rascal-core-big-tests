@@ -1,5 +1,5 @@
 name: Integration Test
-run-name: Testing `${{ inputs.rascal_branch_build }}` (Rascal) with ${{ case(inputs.typepal_branch_build != '', format('`{0}`', inputs.typepal_branch_build), 'version in pom.xml') }} (Typepal)
+run-name: Testing rascal:`${{ inputs.rascal_branch_build }}` with typepal${{ case(inputs.typepal_branch_build != '', format('`:{0}`', inputs.typepal_branch_build), ' version from `rascal/pom.xml') }}
 on:
   workflow_dispatch:
     inputs:
