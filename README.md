@@ -10,27 +10,25 @@ To be clear, currently it's only for the typechecker:
 
 Note: Beside typechecking, the only tests that are run are the rename tests in rascal-lsp (because they themselves run the typechecker as well).
 
+To start a new run, do, go to this page: [Integration Test actions](https://github.com/usethesource/rascal-core-big-tests/actions/workflows/run-integration-test.yml).
+
+## Sources/branches used in the integration
+
+The intergration test checks out libraries based on the configuration in the `projects` global variable in the `src/main/rascal/Main.rsc` file. However, for some scenarios you can override that. The following section describes how you can override this.
+
 ## Scenarios
 
-The integration test has some parameters that are a bit complex to use, so this section will discuss a few common scenarios and how to use the parameters.
-
-It always start with:
-
-> Go to "Actions" (top menu) -> "Integration Test" (left menu) -> "Run workflow" (drop-down menu).
-
-
-For every scenario there will be the following details that we care for:
+The integration test has some parameters that are a bit complex to use, so this section will discuss a few common scenarios and how to use the parameters. The end goal of the parameters is to configure the following assets:
 
 | asset | explained |
 |---|---|
-| typepal.jar | the typepal.jar that gets packaged into rascal.jar |
 | rascal.jar | the rascal.jar that gets build. Contains the stdlib and typechecker used |
+| typepal.jar | the typepal.jar that gets packaged into rascal.jar |
 | rascal-stdlib | the standard lib that is typechecked and used to typecheck all the downstream libraries |
 | typepal | the Typepal version that is typechecked during the typechecking of libraries |
-| typepal-copy | the Typepal version that is copied into rascal-all, this is always te same as `typepal.jar` |
 | rascal-all | the version of the Rascal compiler that is typechecked by `rascal.jar`. This always follows the branch of `rascal.jar` |
+| typepal-copy | the Typepal version that is copied into rascal-all, this is always te same as `typepal.jar` |
 | rascal-lsp-all | the version of rename code in rascal-lsp (that uses the Rascal compiler) that is typechecked by `rascal.jar` |
-
 
 
 ### Scenario 1: Changes in Rascal
@@ -43,12 +41,12 @@ There are changes in the Rascal project (in a PR) that might influence the typec
 
 | asset | version |
 |---|---|
-| typepal.jar | extracted from `rascal/pom.xml` in `$rascal_branch_build`, is assumed to be released |
 | rascal.jar | `$rascal_branch_build` |
+| typepal.jar | extracted from `rascal/pom.xml` in `$rascal_branch_build`, is assumed to be released |
 | rascal-stdlib | branch configured in `Main.rsc` |
 | typepal | branch configured in `Main.rsc` |
-| typepal-copy | same as `typepal.jar` |
 | rascal-all | same as `rascal.jar` |
+| typepal-copy | same as `typepal.jar` |
 | rascal-lsp-all | branch configured in `Main.rsc` |
 
 ### Scenario 2: Changes in Rascal and Typepal
@@ -63,12 +61,12 @@ Setting `typepal_branch_build` will override the Typepal dependency in the `rasc
 
 | asset | version |
 |---|---|
-| typepal.jar | `$typepal_branch_build` |
 | rascal.jar | `$rascal_branch_build` |
+| typepal.jar | `$typepal_branch_build` |
 | rascal-stdlib | branch configured in `Main.rsc` |
 | typepal | branch configured in `Main.rsc` |
-| typepal-copy | same as `typepal.jar` |
 | rascal-all | same as `rascal.jar` |
+| typepal-copy | same as `typepal.jar` |
 | rascal-lsp-all | branch configured in `Main.rsc` |
 
 ### Scenario 3: Changes in the typechecker that require changes in rascal-lsp
@@ -81,12 +79,12 @@ There are changes in the Rascal project that might influence the typechecker. An
 
 | asset | version |
 |---|---|
-| typepal.jar | `$typepal_branch_build` |
 | rascal.jar | `$rascal_branch_build` |
+| typepal.jar | `$typepal_branch_build` |
 | rascal-stdlib | branch configured in `Main.rsc` |
 | typepal | branch configured in `Main.rsc` |
-| typepal-copy | same as `typepal.jar` |
 | rascal-all | same as `rascal.jar` |
+| typepal-copy | same as `typepal.jar` |
 | rascal-lsp-all | `$rascal_lsp_all_branch_check` |
 
 ### Scenario 4: Changes in Rascal and Typepal that are "incompatible" with the main branch
@@ -103,10 +101,10 @@ Setting `typepal_branch_build` will override the Typepal dependency in `rascal/p
 
 | asset | version |
 |---|---|
-| typepal.jar | `$typepal_branch_build` |
 | rascal.jar | `$rascal_branch_build` |
+| typepal.jar | `$typepal_branch_build` |
 | rascal-stdlib | `$rascal_branch_check` |
 | typepal | `$typepal_branch_check` |
-| typepal-copy | same as `typepal.jar` |
 | rascal-all | same as `rascal.jar` |
+| typepal-copy | same as `typepal.jar` |
 | rascal-lsp-all | branch configured in `Main.rsc` or `$rascal_lsp_all_branch_check` |
