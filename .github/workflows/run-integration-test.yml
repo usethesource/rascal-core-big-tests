@@ -140,13 +140,13 @@ jobs:
 
       - name: Set optional branch overrides
         run: |
-          if [[ -n ${{ inputs.rascal_branch_check != ''}} ]]; then
+          if [[ -n "${{ inputs.rascal_branch_check }}" ]]; then
             echo "RASCAL_BRANCH=${{ inputs.rascal_branch_check }}" >> "$GITHUB_ENV"
           fi
-          if [[ -n ${{ inputs.typepal_branch_check != ''}} ]]; then
+          if [[ -n "${{ inputs.typepal_branch_check }}" ]]; then
             echo "TYPEPAL_BRANCH=${{ inputs.typepal_branch_check }}" >> "$GITHUB_ENV"
           fi
-          if [[ -n ${{ inputs.rascal_lsp_all_branch_check != ''}} ]]; then
+          if [[ -n "${{ inputs.rascal_lsp_all_branch_check }}" ]]; then
             echo "RASCAL_LSP_ALL_BRANCH=${{ inputs.rascal_lsp_all_branch_check }}" >> "$GITHUB_ENV"
           fi
 
