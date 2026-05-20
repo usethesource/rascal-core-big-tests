@@ -20,8 +20,8 @@ The intergration test checks out libraries based on the configuration in the `pr
 
 The integration test has some parameters that are a bit complex to use, so this section will discuss a few common scenarios and how to use the parameters. The end goal of the parameters is to configure the following assets:
 
-| asset | explained |
-|---|---|
+| Asset | Explained |
+|:---|:---|
 | rascal.jar | the rascal.jar that gets build. Contains the stdlib and typechecker used |
 | typepal.jar | the typepal.jar that gets packaged into rascal.jar |
 | rascal-stdlib | the standard lib that is typechecked and used to typecheck all the downstream libraries |
@@ -39,8 +39,8 @@ There are changes in the Rascal project (in a PR) that might influence the typec
 
 #### Effect
 
-| asset | version |
-|---|---|
+| Asset | Version |
+|:---|:---|
 | rascal.jar | `$rascal_branch_build` |
 | typepal.jar | extracted from `rascal/pom.xml` in `$rascal_branch_build`, is assumed to be released |
 | rascal-stdlib | branch configured in `Main.rsc` |
@@ -60,8 +60,8 @@ Setting `typepal_branch_build` will override the Typepal dependency in the `rasc
 
 #### Effect
 
-| asset | version |
-|---|---|
+| Asset | Version |
+|:---|:---|
 | rascal.jar | `$rascal_branch_build` |
 | typepal.jar | `$typepal_branch_build` |
 | rascal-stdlib | branch configured in `Main.rsc` |
@@ -79,8 +79,8 @@ There are changes in the Rascal project that might influence the typechecker. An
 
 #### Effect
 
-| asset | version |
-|---|---|
+| Asset | Version |
+|:---|:---|
 | rascal.jar | `$rascal_branch_build` |
 | typepal.jar | `$typepal_branch_build` |
 | rascal-stdlib | branch configured in `Main.rsc` |
@@ -103,8 +103,8 @@ Setting `typepal_branch_build` will override the Typepal dependency in `rascal/p
 
 #### Effect
 
-| asset | version |
-|---|---|
+| Asset | Version |
+|:---|:---|
 | rascal.jar | `$rascal_branch_build` |
 | typepal.jar | `$typepal_branch_build` |
 | rascal-stdlib | `$rascal_branch_check` |
