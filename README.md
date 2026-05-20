@@ -22,15 +22,15 @@ The intergration test checks out libraries based on the configuration in the `pr
 
 The integration test has some parameters that are a bit complex to use, so this section will discuss a few common scenarios and how to use the parameters. The end goal of the parameters is to configure the following assets:
 
-| Asset | Explained |
-|:---|:---|
-| rascal.jar | the rascal.jar that gets build. Contains the stdlib and typechecker used |
-| typepal.jar | the typepal.jar that gets packaged into rascal.jar |
-| rascal-stdlib | the standard lib that is typechecked and used to typecheck all the downstream libraries |
-| typepal | the Typepal version that is typechecked during the typechecking of libraries |
-| rascal-all | the version of the Rascal compiler that is typechecked by `rascal.jar`. This always follows the branch of `rascal.jar` |
-| typepal-copy | the Typepal version that is copied into rascal-all, this is always te same as `typepal.jar` |
-| rascal-lsp-all | the version of rename code in rascal-lsp (that uses the Rascal compiler) that is typechecked by `rascal.jar` |
+| Asset | Explained | Controlled by |
+|:---|:---|:--|
+| rascal.jar | the rascal.jar that gets build. Contains the stdlib and typechecker used | `$rascal_branch_build` |
+| typepal.jar | the typepal.jar that gets packaged into rascal.jar | `rascal/pom.xml` or `$typepal_branch_build` |
+| rascal-stdlib | the standard lib that is typechecked and used to typecheck all the downstream libraries | `Main.rsc` or `$rascal_branch_check` |
+| typepal | the Typepal version that is typechecked during the typechecking of libraries | `Main.rsc` or `$typepal_branch_check` |
+| rascal-all | the version of the Rascal compiler that is typechecked by `rascal.jar`. | `rascal.jar` |
+| typepal-copy | the Typepal version that is copied into rascal-all. | `typepal.jar` |
+| rascal-lsp-all | the version of rename code in rascal-lsp (that uses the Rascal compiler) that is typechecked by `rascal.jar` |  `Main.rsc` or `$rascal-lsp-all` |
 
 
 ### Scenario 1: Changes in Rascal
