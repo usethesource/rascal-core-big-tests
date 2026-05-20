@@ -12,7 +12,7 @@ Note: Beside typechecking, the only tests that are run are the rename tests in r
 
 To start a new run, do, go to this page: [Integration Test actions](https://github.com/usethesource/rascal-core-big-tests/actions/workflows/run-integration-test.yml).
 
-## Sources/branches used in the integration
+## Sources/branches used in the integration test
 
 The intergration test checks out libraries based on the configuration in the `projects` global variable in the `src/main/rascal/Main.rsc` file. However, for some scenarios you can override that. The following section describes how you can override this.
 
