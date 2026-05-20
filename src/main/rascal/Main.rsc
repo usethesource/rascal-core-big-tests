@@ -317,7 +317,7 @@ int runTests(list[str] testModules, loc rascalJar, loc repoFolder, str projectNa
         testWrapperDest = copyAndRename(testWrapperLocation, destDir, testWrapperName);
 
         // Prepare environment
-        envVars = ("ADDITIONAL_TPLS": "<resolveLocation(rpcfg.bin)>" | rpcfg <- pcfgs["rascal"]);
+        envVars = ("ADDITIONAL_TPLS": "<resolveLocation(rpcfg.bin)>" | rpcfg <- pcfgs["rascal-stdlib"]);
 
         startTime = realTime();
         try {
