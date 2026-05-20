@@ -1,11 +1,11 @@
 # Rascal Typechecker Integration Test
 
-This repo is used to run integration test on the rascal typechecker. It's goal is to identify regressions with a new version of typechecker (maybe caused by interpreter/typepal/stdlib changes) in typechecking rascal code *without making any intermediate releases*. The goal is to identify issues before we're in some kind of bootstrap cycle or a regular release process.
+This repo is used to run integration test on the Rascal typechecker. Its goal is to identify regressions with a new version of typechecker (maybe caused by interpreter/typepal/stdlib changes) when typechecking Rascal code *without making any intermediate releases*. The goal is to identify issues before we're in some kind of bootstrap cycle or a regular release process.
 
-To clear, currently it's only for the typechecker:
+To be clear, currently it's only for the typechecker:
 
-- it does not test the compiler or it's generated code
-- it does not test the tpls and it's compatibility. It explicatly ignores any tpls in any jars.
+- it does not test the compiler or its generated code
+- it does not test the tpls and its compatibility. It explicitly ignores any tpls in any jars.
 - it does not test the tutor generator.
 
 ## Scenarios
@@ -24,16 +24,16 @@ For every scenario there will be the following details that we care for:
 | typepal.jar | the typepal.jar that gets packaged into rascal.jar |
 | rascal.jar | the rascal.jar that gets build. Contains the stdlib and typechecker used |
 | rascal-stdlib | the standard lib that is typechecked and used to typecheck all the downstream libraries |
-| typepal | the typepal version that is typechecked during the typechecking of libraries |
-| typepal-copy | the typepal version that is copied into rascal-all, this is always te same as `typepal.jar` |
-| rascal-all | the version of the rascal compiler that is typechecked by `rascal.jar`. This always follows the branch of the `rascal.jar` |
-| rascal-lsp-all | the version of rename code in rascal-lsp (that uses the rascal-compiler) that is typechecked by `rascal.jar` |
+| typepal | the Typepal version that is typechecked during the typechecking of libraries |
+| typepal-copy | the Typepal version that is copied into rascal-all, this is always te same as `typepal.jar` |
+| rascal-all | the version of the Rascal compiler that is typechecked by `rascal.jar`. This always follows the branch of `rascal.jar` |
+| rascal-lsp-all | the version of rename code in rascal-lsp (that uses the Rascal compiler) that is typechecked by `rascal.jar` |
 
 
 
-### Changes in rascal
+### Changes in Rascal
 
-There are changes the rascal project (in a PR) that might influence the typechecker. __It has no changes in typepal that aren't released yet__.
+There are changes in the Rascal project (in a PR) that might influence the typechecker. __It has no changes in Typepal that aren't released yet__.
 
 > Only set the `rascal_branch_build` parameter to the branch you want to check
 
@@ -47,13 +47,13 @@ There are changes the rascal project (in a PR) that might influence the typechec
 | rascal-all | same as `rascal.jar` |
 | rascal-lsp-all | branch configured in `Main.rsc` |
 
-### Changes in rascal&typepal
+### Changes in Rascal and Typepal
 
-There are changes in both rascal & typepal project that might influence the typechecker.
+There are changes in both the Rascal project and the Typepal project that might influence the typechecker.
 
 > Set `rascal_branch_build` and `typepal_branch_build`
 
-Setting `typepal_branch_build` will override the typepal dependency in the `rascal/pom.xml`, and build it locally before building `rascal.jar`
+Setting `typepal_branch_build` will override the Typepal dependency in the `rascal/pom.xml`, and build it locally before building `rascal.jar`
 
 
 | asset | version |
@@ -68,7 +68,7 @@ Setting `typepal_branch_build` will override the typepal dependency in the `rasc
 
 ### Changes in the typechecker that require changes in rascal-lsp
 
-There are changes in both rascal project that change the typechecker. And it requires changes in rascal-lsp rename code.
+There are changes in the Rascal project that might influence the typechecker. And it requires changes in rascal-lsp rename code.
 
 > Set `rascal_branch_build` and `rascal_lsp_all_branch_check`
 
@@ -82,15 +82,15 @@ There are changes in both rascal project that change the typechecker. And it req
 | rascal-all | same as `rascal.jar` |
 | rascal-lsp-all | `$rascal_lsp_all_branch_check` |
 
-### Changes in rascal&typepal that are "incompatible" with main branch
+### Changes in Rascal and Typepal that are "incompatible" with the main branch
 
-There are changes in both rascal & typepal project that change the typechecker. And we the new typechecker also requires changes in the stdlib, and thus before merging would take a bootstrap cycle (or a intermediate release without tpls).
+There are changes in both the Rascal and the Typepal project that might influence the typechecker. And the new typechecker also requires changes in the stdlib, and thus before merging would take a bootstrap cycle (or an intermediate release without tpls).
 
 > Set `rascal_branch_build`, `typepal_branch_build`, `rascal_branch_check`, `typepal_branch_check`.
 >
-> Optionally you'll also need to set `rascal_lsp_all_branch_check`, if the changes propogate that far
+> Optionally you'll also need to set `rascal_lsp_all_branch_check`, if the changes propagate that far
 
-Setting `typepal_branch_build` will override the typepal dependency in the `rascal/pom.xml`, and build it locally before building `rascal.jar`
+Setting `typepal_branch_build` will override the Typepal dependency in `rascal/pom.xml`, and build it locally before building `rascal.jar`
 
 
 | asset | version |
