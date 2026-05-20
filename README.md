@@ -12,7 +12,7 @@ To clear, currently it's only for the typechecker:
 
 The integration test has some parameters that are a bit complex to use, so this section will discuss a few common scenarios and how to use the parameters.
 
-It always start with: 
+It always start with:
 
 > Go to "Actions" (top menu) -> "Integration Test" (left menu) -> "Run workflow" (drop-down menu).
 
@@ -25,8 +25,8 @@ For every scenario there will be the following details that we care for:
 | rascal.jar | the rascal.jar that gets build. Contains the stdlib and typechecker used |
 | rascal-stdlib | the standard lib that is typechecked and used to typecheck all the downstream libraries |
 | typepal | the typepal version that is typechecked during the typechecking of libraries |
-| typepal-copy | the typepal version that is copied into rascal-all |
-| rascal-all | the version of the rascal compiler that is typechecked by `rascal.jar` |
+| typepal-copy | the typepal version that is copied into rascal-all, this is always te same as `typepal.jar` |
+| rascal-all | the version of the rascal compiler that is typechecked by `rascal.jar`. This always follows the branch of the `rascal.jar` |
 | rascal-lsp-all | the version of rename code in rascal-lsp (that uses the rascal-compiler) that is typechecked by `rascal.jar` |
 
 
@@ -37,32 +37,68 @@ There are changes the rascal project (in a PR) that might influence the typechec
 
 > Only set the `rascal_branch_build` parameter to the branch you want to check
 
-Note that the typechecking of the rascal stdlib will be targeting main, while typechecking of the compiler itself will target the `rascal_branch_build`.
-
 | asset | version |
 |---|---|
-| typepal.jar | extracted from `rascal/pom.xml` in `rascal_branch_build`, is assumed to be released |
-| rascal.jar | `rascal_branch_build` |
-| rascal-stdlib | `main` |
-| typepal | `main` |
+| typepal.jar | extracted from `rascal/pom.xml` in `$rascal_branch_build`, is assumed to be released |
+| rascal.jar | `$rascal_branch_build` |
+| rascal-stdlib | branch configured in `Main.rsc` |
+| typepal | branch configured in `Main.rsc` |
 | typepal-copy | same as `typepal.jar` |
-| rascal-all | `rascal_branch_build` |
-| rascal-lsp-all | `main` |
-
+| rascal-all | same as `rascal.jar` |
+| rascal-lsp-all | branch configured in `Main.rsc` |
 
 ### Changes in rascal&typepal
 
-There are changes in both rascal & typepal project that might influence the typechecker. 
+There are changes in both rascal & typepal project that might influence the typechecker.
+
+> Set `rascal_branch_build` and `typepal_branch_build`
+
+Setting `typepal_branch_build` will override the typepal dependency in the `rascal/pom.xml`, and build it locally before building `rascal.jar`
 
 
-## Usage
+| asset | version |
+|---|---|
+| typepal.jar | `$typepal_branch_build` |
+| rascal.jar | `$rascal_branch_build` |
+| rascal-stdlib | branch configured in `Main.rsc` |
+| typepal | branch configured in `Main.rsc` |
+| typepal-copy | same as `typepal.jar` |
+| rascal-all | same as `rascal.jar` |
+| rascal-lsp-all | branch configured in `Main.rsc` |
 
- 1. Go to "Actions" (top menu) -> "Integration Test" (left menu) -> "Run workflow" (drop-down menu).
- 2. Select which branches/tags of Rascal and Typepal to use **to build `rascal.jar`**:
-      - The branch/tag of Rascal is mandatory.
-      - The branch/tag of Typepal is optional:
-          - If it isn't provided, then by default, `rascal.jar` is built using the dependency version of Typepal as defined in `pom.xml` of Rascal. In most cases, this is the right default, as `pom.xml` normally points to the intended dependency version of Typepal already.
-          - If it is provided, then the provided branch/tag of Typepal is locally installed in the Maven repository, `pom.xml` of Rascal is locally updated to point to it, and `rascal.jar` is built using that installed dependency version of Typepal. It serves the use case of testing the effect of new changes in a non-`main` branch of Typepal on Rascal before merging those changes into `main`.
- 3. Select which branches/tags of Rascal and Typepal to use **to typecheck the standard library and Typepal sources**. Both branches/tags are optional. If they aren't provided, then by default, `main` is used. In most cases, this is the right default, as it serves the use case of testing that new changes to Rascal/Typepal (as reflected in `rascal.jar`) do not break the well-typedness of the existing standard library and Typepal sources.
+### Changes in the typechecker that require changes in rascal-lsp
 
-Note: In the distinguished `...-all` tests, the same versions of the standard library and Typepal sources are typechecked as those that are used to build `rascal.jar`.
+There are changes in both rascal project that change the typechecker. And it requires changes in rascal-lsp rename code.
+
+> Set `rascal_branch_build` and `rascal_lsp_all_branch_check`
+
+| asset | version |
+|---|---|
+| typepal.jar | `$typepal_branch_build` |
+| rascal.jar | `$rascal_branch_build` |
+| rascal-stdlib | branch configured in `Main.rsc` |
+| typepal | branch configured in `Main.rsc` |
+| typepal-copy | same as `typepal.jar` |
+| rascal-all | same as `rascal.jar` |
+| rascal-lsp-all | `$rascal_lsp_all_branch_check` |
+
+### Changes in rascal&typepal that are "incompatible" with main branch
+
+There are changes in both rascal & typepal project that change the typechecker. And we the new typechecker also requires changes in the stdlib, and thus before merging would take a bootstrap cycle (or a intermediate release without tpls).
+
+> Set `rascal_branch_build`, `typepal_branch_build`, `rascal_branch_check`, `typepal_branch_check`.
+>
+> Optionally you'll also need to set `rascal_lsp_all_branch_check`, if the changes propogate that far
+
+Setting `typepal_branch_build` will override the typepal dependency in the `rascal/pom.xml`, and build it locally before building `rascal.jar`
+
+
+| asset | version |
+|---|---|
+| typepal.jar | `$typepal_branch_build` |
+| rascal.jar | `$rascal_branch_build` |
+| rascal-stdlib | `$rascal_branch_check` |
+| typepal | `$typepal_branch_check` |
+| typepal-copy | same as `typepal.jar` |
+| rascal-all | same as `rascal.jar` |
+| rascal-lsp-all | branch configured in `Main.rsc` or `$rascal_lsp_all_branch_check` |
