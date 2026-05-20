@@ -88,7 +88,7 @@ jobs:
       # dependency version (otherwise, silently, the dependency version in
       # Rascal's `pom.xml` is still used).
 
-      - name: Install typepal dependency version to build jar (overriding pom.xml)
+      - name: Prepare custom typepal dependency
         id: typepal-override
         if: ${{ inputs.typepal_branch_build != '' }}
         run: |
@@ -99,7 +99,7 @@ jobs:
           echo "TYPEPAL_COPY_BRANCH=${{ inputs.typepal_branch_build }}" >> "$GITHUB_ENV"
         working-directory: deps/typepal
 
-      - name: Write typepal dependency version to build jar (overriding pom.xml)
+      - name: Overwrite typepal dependency in rascal/pom.xml
         # In most cases, this step isn't needed as pom.xml normally points to
         # the intended dependency version of Typepal already. A case when it
         # could be useful is to test the effect of new changes in a non-`main`
@@ -113,7 +113,7 @@ jobs:
         working-directory: deps/rascal
 
       # in most cases, if typepal isn't changed, we read it from the pom.xml, to know which version to user
-      - name: Set typepal branch to be typechecked in the ...-all tests
+      - name: Infer typepal branch to be used in the ...-all tests
         if: ${{ inputs.typepal_branch_build == ''}}
         # If a Typepal branch/tag to build `rascal.jar` **isn't** provided, then
         # a Typepal dependency version has been installed and used based on
