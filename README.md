@@ -10,7 +10,9 @@ To be clear, currently it's only for the typechecker:
 
 Note: Beside typechecking, the only tests that are run are the rename tests in rascal-lsp (because they themselves run the typechecker as well).
 
-To start a new run, do, go to this page: [Integration Test actions](https://github.com/usethesource/rascal-core-big-tests/actions/workflows/run-integration-test.yml).
+To start a new run, do, go to this page: [Integration Test actions](https://github.com/usethesource/rascal-core-big-tests/actions/workflows/run-integration-test.yml) and click the button in the right top corner for "Run workflow".
+
+<img width="1271" height="230" alt="image" src="https://github.com/user-attachments/assets/6dc59d25-524c-413b-b1fb-5b6574e09ed9" />
 
 ## Sources/branches used in the integration test
 
