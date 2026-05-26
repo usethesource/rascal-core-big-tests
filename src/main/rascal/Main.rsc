@@ -30,21 +30,21 @@ alias Projects = rel[str name, Project config];
 
 Projects projects = {
     <"rascal-stdlib", project(|https://github.com/usethesource/rascal.git|, {},
-        branch=(getSystemEnvironment()["RASCAL_BRANCH"] ? "main"),
+        branch=trim(getSystemEnvironment()["RASCAL_BRANCH"] ? "main"),
         srcs = ["src/org/rascalmpl/library"],
         ignores={"experiments", "resource", "lang/rascal/tests", "lang/rascal/syntax/tests", "lang/rascal/grammar/tests"},
         parallel = true,
         parallelPreCheck = {"src/org/rascalmpl/library/Prelude.rsc"})>,
     <"rascal-all", project(|https://github.com/usethesource/rascal.git|, {"typepal-copy"}, // Dependency to ensure the right `typepal` sources are available
-        branch=(getSystemEnvironment()["RASCAL_ALL_BRANCH"] ? "main"),
+        branch=trim(getSystemEnvironment()["RASCAL_ALL_BRANCH"] ? "main"),
         ignores={"lang/rascal/tutor/examples", "NestedOr.rsc"},
         parallel = true,
         parallelPreCheck = {"src/org/rascalmpl/library/Prelude.rsc", "src/org/rascalmpl/compiler/lang/rascalcore/check/CheckerCommon.rsc"})>,
     <"typepal", project(|https://github.com/usethesource/typepal.git|, {"rascal-stdlib"},
-        branch=(getSystemEnvironment()["TYPEPAL_BRANCH"] ? "main"),
+        branch=trim(getSystemEnvironment()["TYPEPAL_BRANCH"] ? "main"),
         ignores={"examples"})>,
     <"typepal-copy", project(|https://github.com/usethesource/typepal.git|, {},
-        branch=(getSystemEnvironment()["TYPEPAL_COPY_BRANCH"] ? "main"),
+        branch=trim(getSystemEnvironment()["TYPEPAL_COPY_BRANCH"] ? "main"),
         // This project is needed only to checkout `typepal` and copy the
         // sources to `rascal-all` (independent of the regular `typepal` repo,
         // which may be on a different branch), so ignore all sources here:
@@ -60,7 +60,7 @@ Projects projects = {
     <"drambiguity", project(|https://github.com/cwi-swat/drambiguity.git|, {"rascal-stdlib", "salix-core"})>,
     <"rascal-git", project(|https://github.com/cwi-swat/rascal-git.git|, {"rascal-stdlib"})>,
     <"php-analysis", project(|https://github.com/cwi-swat/php-analysis.git|, {"rascal-stdlib", "rascal-git"}, srcs=["src/main/rascal"])>,
-    <"rascal-lsp-all", project(|https://github.com/usethesource/rascal-language-servers.git|, {"rascal-all"}, branch=(getSystemEnvironment()["RASCAL_LSP_ALL_BRANCH"] ? "main"), subdir="rascal-lsp", srcs=["src/main/rascal/library","src/main/rascal/lsp"])>,
+    <"rascal-lsp-all", project(|https://github.com/usethesource/rascal-language-servers.git|, {"rascal-all"}, branch=trim(getSystemEnvironment()["RASCAL_LSP_ALL_BRANCH"] ? "main"), subdir="rascal-lsp", srcs=["src/main/rascal/library","src/main/rascal/lsp"])>,
     <"rascal-lsp", project(|https://github.com/usethesource/rascal-language-servers.git|, {"rascal-stdlib", "typepal"}, srcs=["src/main/rascal/library", "src/main/rascal/lsp"], ignores = {"lang/rascal/lsp/refactor", "lang/rascal/tests/rename", "lang/rascal/lsp/IDECheckerWrapper.rsc"}, subdir="rascal-lsp", testPrefixes={"lang::rascal::tests::rename"})>
 };
 
