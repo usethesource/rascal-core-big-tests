@@ -16,7 +16,7 @@ data Project
     = project(
         loc repo, // git clone url
         set[str] dependencies, // other project this depends on (at a rascal level)
-        bool rascalLib=false, // instead of rascal as a regular "project" dependency, us the tpls that came with the chosen rascal-version
+        bool rascalLib=false, // instead of rascal as a regular "project" dependency, use the tpls that came with the chosen rascal version
         str branch="main", // branch to checkout from the remote
         str subdir="", // if the rascal project is not at the root of the repo
         list[str] srcs = [], // override source calculation
@@ -60,6 +60,8 @@ Projects projects = {
     <"drambiguity", project(|https://github.com/cwi-swat/drambiguity.git|, {"rascal-stdlib", "salix-core"})>,
     <"rascal-git", project(|https://github.com/cwi-swat/rascal-git.git|, {"rascal-stdlib"})>,
     <"php-analysis", project(|https://github.com/cwi-swat/php-analysis.git|, {"rascal-stdlib", "rascal-git"}, srcs=["src/main/rascal"])>,
+    <"bird-core", project(|https://github.com/SWAT-engineering/bird.git|, {"rascal-stdlib"}, subdir="bird-core")>,
+    <"bird-ide", project(|https://github.com/SWAT-engineering/bird.git|, {"rascal-stdlib", "bird-core"}, subdir="bird-ide")>,
     <"rascal-lsp-all", project(|https://github.com/usethesource/rascal-language-servers.git|, {"rascal-all"}, branch=trim(getSystemEnvironment()["RASCAL_LSP_ALL_BRANCH"] ? "main"), subdir="rascal-lsp", srcs=["src/main/rascal/library","src/main/rascal/lsp"])>,
     <"rascal-lsp", project(|https://github.com/usethesource/rascal-language-servers.git|, {"rascal-stdlib", "typepal"}, srcs=["src/main/rascal/library", "src/main/rascal/lsp"], ignores = {"lang/rascal/lsp/refactor", "lang/rascal/tests/rename", "lang/rascal/lsp/IDECheckerWrapper.rsc"}, subdir="rascal-lsp", testPrefixes={"lang::rascal::tests::rename"})>
 };
