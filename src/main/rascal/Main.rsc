@@ -61,7 +61,7 @@ Projects projects = {
     <"rascal-git", project(|https://github.com/cwi-swat/rascal-git.git|, {"rascal-stdlib"})>,
     <"php-analysis", project(|https://github.com/cwi-swat/php-analysis.git|, {"rascal-stdlib", "rascal-git"}, srcs=["src/main/rascal"])>,
     <"bird-core", project(|https://github.com/SWAT-engineering/bird.git|, {"rascal-stdlib", "typepal"}, subdir="bird-core")>,
-    <"bird-ide", project(|https://github.com/SWAT-engineering/bird.git|, {"rascal-stdlib", "bird-core", "rascal-lsp"}, subdir="bird-ide")>,
+    <"bird-ide", project(|https://github.com/SWAT-engineering/bird.git|, {"rascal-stdlib", "bird-core", "rascal-lsp", "typepal"}, subdir="bird-ide")>,
     <"rascal-lsp-all", project(|https://github.com/usethesource/rascal-language-servers.git|, {"rascal-all"}, branch=trim(getSystemEnvironment()["RASCAL_LSP_ALL_BRANCH"] ? "main"), subdir="rascal-lsp", srcs=["src/main/rascal/library","src/main/rascal/lsp"])>,
     <"rascal-lsp", project(|https://github.com/usethesource/rascal-language-servers.git|, {"rascal-stdlib", "typepal"}, srcs=["src/main/rascal/library", "src/main/rascal/lsp"], ignores = {"lang/rascal/lsp/refactor", "lang/rascal/tests/rename", "lang/rascal/lsp/IDECheckerWrapper.rsc"}, subdir="rascal-lsp", testPrefixes={"lang::rascal::tests::rename"})>
 };
