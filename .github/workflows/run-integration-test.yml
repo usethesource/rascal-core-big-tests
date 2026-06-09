@@ -48,7 +48,7 @@ jobs:
     strategy:
       matrix:
         target:
-          - "'rascal-stdlib' 'flybytes' 'salix-core' 'salix-contrib' 'drambiguity' 'rascal-lsp' 'rascal-git' 'php-analysis' 'typepal' 'clair' 'java-air' 'python-air' 'rascal-lucene'"
+          - "'rascal-stdlib' 'flybytes' 'salix-core' 'salix-contrib' 'drambiguity' 'rascal-lsp' 'rascal-git' 'php-analysis' 'typepal' 'clair' 'java-air' 'python-air' 'rascal-lucene' 'bird-core' 'bird-ide'"
           - "'typepal-copy' 'rascal-all' 'rascal-lsp-all'"
       fail-fast: false
     steps:
@@ -120,7 +120,7 @@ jobs:
         # Rascal's `pom.xml`. To typecheck the same version in the ...-all
         # tests, that version needs to be read in Rascal's `pom.xml`.
         run: |
-          version=$(mvn dependency:list | grep typepal | sed 's/.*org.rascalmpl:typepal:jar:\(.*\):.*/\1/')
+          version=$(mvn -ntp dependency:list | grep typepal | sed 's/.*org.rascalmpl:typepal:jar:\(.*\):.*/\1/')
           echo "TYPEPAL_COPY_BRANCH=v$version" >> "$GITHUB_ENV"
         working-directory: deps/rascal
 
