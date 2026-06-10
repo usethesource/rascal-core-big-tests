@@ -28,6 +28,7 @@ The integration test has some parameters that are a bit complex to use, so this 
 | typepal.jar | the typepal.jar that gets packaged into rascal.jar | `rascal/pom.xml` or `$typepal_branch_build` |
 | rascal-stdlib | the standard lib that is typechecked and used to typecheck all the downstream libraries | `Main.rsc` or `$rascal_branch_check` |
 | typepal | the Typepal version that is typechecked during the typechecking of libraries | `Main.rsc` or `$typepal_branch_check` |
+| rascal-lsp | the version of rascal-lsp that is typechecked during the typechecking of libraries | `Main.rsc` or `$rascal_lsp_branch_check` |
 | rascal-all | the version of the Rascal compiler that is typechecked by `rascal.jar`. | `rascal.jar` |
 | typepal-copy | the Typepal version that is copied into rascal-all. | `typepal.jar` |
 | rascal-lsp-all | the version of rename code in rascal-lsp (that uses the Rascal compiler) that is typechecked by `rascal.jar` |  `Main.rsc` or `$rascal-lsp-all` |
@@ -47,6 +48,7 @@ There are changes in the Rascal project (in a PR) that might influence the typec
 | typepal.jar | extracted from `rascal/pom.xml` in `$rascal_branch_build`, is assumed to be released |
 | rascal-stdlib | branch configured in `Main.rsc` |
 | typepal | branch configured in `Main.rsc` |
+| rascal-lsp | branch configured in `Main.rsc` |
 | rascal-all | same as `rascal.jar` |
 | typepal-copy | same as `typepal.jar` |
 | rascal-lsp-all | branch configured in `Main.rsc` |
@@ -68,6 +70,7 @@ Setting `typepal_branch_build` will override the Typepal dependency in the `rasc
 | typepal.jar | `$typepal_branch_build` |
 | rascal-stdlib | branch configured in `Main.rsc` |
 | typepal | branch configured in `Main.rsc` |
+| rascal-lsp | branch configured in `Main.rsc` |
 | rascal-all | same as `rascal.jar` |
 | typepal-copy | same as `typepal.jar` |
 | rascal-lsp-all | branch configured in `Main.rsc` |
@@ -77,7 +80,8 @@ Setting `typepal_branch_build` will override the Typepal dependency in the `rasc
 There are changes in the Rascal project that might influence the typechecker. And it requires changes in rascal-lsp rename code.
 
 1. Set `rascal_branch_build`
-2. Set `rascal_lsp_all_branch_check`
+2. Set `rascal_lsp_branch_check`
+3. Set `rascal_lsp_all_branch_check`
 
 #### Effect
 
@@ -87,6 +91,7 @@ There are changes in the Rascal project that might influence the typechecker. An
 | typepal.jar | `$typepal_branch_build` |
 | rascal-stdlib | branch configured in `Main.rsc` |
 | typepal | branch configured in `Main.rsc` |
+| rascal-lsp | `$rascal_lsp_branch_check` |
 | rascal-all | same as `rascal.jar` |
 | typepal-copy | same as `typepal.jar` |
 | rascal-lsp-all | `$rascal_lsp_all_branch_check` |
@@ -111,6 +116,7 @@ Setting `typepal_branch_build` will override the Typepal dependency in `rascal/p
 | typepal.jar | `$typepal_branch_build` |
 | rascal-stdlib | `$rascal_branch_check` |
 | typepal | `$typepal_branch_check` |
+| rascal-lsp | branch configured in `Main.rsc` |
 | rascal-all | same as `rascal.jar` |
 | typepal-copy | same as `typepal.jar` |
 | rascal-lsp-all | branch configured in `Main.rsc` or `$rascal_lsp_all_branch_check` |

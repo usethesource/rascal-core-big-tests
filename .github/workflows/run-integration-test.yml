@@ -20,6 +20,10 @@ on:
         description: 'typepal branch/tag to be typechecked. Default: configured in Main.rsc.'
         required: false
 
+      rascal_lsp_branch_check:
+        description: 'rascal-lsp branch/tag to be typechecked. Default: configured in Main.rsc.'
+        required: false
+
       rascal_lsp_all_branch_check:
         description: 'rascal-lsp-all branch/tag to be typechecked. Default: configured in Main.rsc.'
         required: false
@@ -145,6 +149,9 @@ jobs:
           fi
           if [[ -n "${{ inputs.typepal_branch_check }}" ]]; then
             echo "TYPEPAL_BRANCH=${{ inputs.typepal_branch_check }}" >> "$GITHUB_ENV"
+          fi
+          if [[ -n "${{ inputs.rascal_lsp_branch_check }}" ]]; then
+            echo "RASCAL_LSP_BRANCH=${{ inputs.rascal_lsp_branch_check }}" >> "$GITHUB_ENV"
           fi
           if [[ -n "${{ inputs.rascal_lsp_all_branch_check }}" ]]; then
             echo "RASCAL_LSP_ALL_BRANCH=${{ inputs.rascal_lsp_all_branch_check }}" >> "$GITHUB_ENV"
