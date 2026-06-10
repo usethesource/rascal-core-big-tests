@@ -63,7 +63,7 @@ Projects projects = {
     <"bird-core", project(|https://github.com/SWAT-engineering/bird.git|, {"rascal-stdlib", "typepal"}, subdir="bird-core")>,
     <"bird-ide", project(|https://github.com/SWAT-engineering/bird.git|, {"rascal-stdlib", "bird-core", "rascal-lsp", "typepal"}, subdir="bird-ide")>,
     <"rascal-lsp-all", project(|https://github.com/usethesource/rascal-language-servers.git|, {"rascal-all"}, branch=trim(getSystemEnvironment()["RASCAL_LSP_ALL_BRANCH"] ? "main"), subdir="rascal-lsp", srcs=["src/main/rascal/library","src/main/rascal/lsp"])>,
-    <"rascal-lsp", project(|https://github.com/usethesource/rascal-language-servers.git|, {"rascal-stdlib", "typepal"}, srcs=["src/main/rascal/library", "src/main/rascal/lsp"], ignores = {"lang/rascal/lsp/refactor", "lang/rascal/tests/rename", "lang/rascal/lsp/IDECheckerWrapper.rsc"}, subdir="rascal-lsp", testPrefixes={"lang::rascal::tests::rename"})>
+    <"rascal-lsp", project(|https://github.com/usethesource/rascal-language-servers.git|, {"rascal-stdlib", "typepal"}, branch=trim(getSystemEnvironment()["RASCAL_LSP_BRANCH"] ? "main"), srcs=["src/main/rascal/library", "src/main/rascal/lsp"], ignores = {"lang/rascal/lsp/refactor", "lang/rascal/tests/rename", "lang/rascal/lsp/IDECheckerWrapper.rsc"}, subdir="rascal-lsp", testPrefixes={"lang::rascal::tests::rename"})>
 };
 
 bool isWindows = /win/i := getSystemProperty("os.name");
