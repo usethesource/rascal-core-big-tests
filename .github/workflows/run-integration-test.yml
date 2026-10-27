@@ -55,14 +55,14 @@ jobs:
           - "'typepal-copy' 'rascal-all' 'rascal-lsp-all'"
       fail-fast: false
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         name: 'Checkout rascal (${{ inputs.rascal_branch_build }})'
         with:
           repository: 'usethesource/rascal'
           ref: ${{ inputs.rascal_branch_build }}
           path: 'deps/rascal'
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         if: ${{ inputs.typepal_branch_build != '' }}
         name: 'Checkout typepal (${{ inputs.typepal_branch_build }})'
         with:
@@ -70,7 +70,7 @@ jobs:
           ref: ${{ inputs.typepal_branch_build }}
           path: 'deps/typepal'
 
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v6
         with:
           java-version: 11
           distribution: 'temurin'
