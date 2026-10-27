@@ -16,7 +16,6 @@ data Project
     = project(
         loc repo, // git clone url
         set[str] dependencies, // other project this depends on (at a rascal level)
-        bool rascalLib=false, // instead of rascal as a regular "project" dependency, use the tpls that came with the chosen rascal version
         str branch="main", // branch to checkout from the remote
         str subdir="", // if the rascal project is not at the root of the repo
         list[str] srcs = [], // override source calculation
@@ -49,7 +48,6 @@ Projects projects = {
         // sources to `rascal-all` (independent of the regular `typepal` repo,
         // which may be on a different branch), so ignore all sources here:
         ignores = {"analysis/typepal", "examples"})>,
-    <"typepal-boot", project(|https://github.com/usethesource/typepal.git|, {}, rascalLib=true, ignores={"examples"})>,
     <"salix-core", project(|https://github.com/usethesource/salix-core.git|, {"rascal-stdlib"})>,
     <"clair", project(|https://github.com/usethesource/clair.git|, {"rascal-stdlib"})>,
     <"java-air", project(|https://github.com/usethesource/java-air.git|, {"rascal-stdlib"})>,
@@ -114,7 +112,7 @@ PathConfig generatePathConfig(str name, Project proj, loc repoFolder, false, fal
         srcs = srcs,
         ignores = ignores,
         bin = repoFolder + "shared-tpls",
-        libs = [repoFolder + "shared-tpls"] + (proj.rascalLib ? [|std:///|] : [])
+        libs = [repoFolder + "shared-tpls"]
     );
 }
 PathConfig generatePathConfig(str name, Project proj, loc repoFolder, true, bool package, loc packageTarget, loc(str) getProjectLoc) {
@@ -124,7 +122,7 @@ PathConfig generatePathConfig(str name, Project proj, loc repoFolder, true, bool
         srcs = srcs,
         ignores = ignores,
         bin = repoFolder + name + "target" + "classes",
-        libs = [ resolve(repoFolder + dep, package ? packageTarget : |relative:///target/classes|) | dep <- proj.dependencies ] + (proj.rascalLib ? [|std:///|] : [])
+        libs = [ resolve(repoFolder + dep, package ? packageTarget : |relative:///target/classes|) | dep <- proj.dependencies ]
     );
     /*
     if (name == "rascal-lsp-all" || name == "rascal-all") {
@@ -195,6 +193,7 @@ int main(
     bool clean=true, // do a clean of the to build folders
     loc repoFolder = |tmp:///repo/|,
     loc rascalJar=|home:///.m2/repository/org/rascalmpl/rascal/0.41.0-RC46/rascal-0.41.0-RC46.jar|,
+    bool runTest = true,
     set[str] tests = {/*all*/}
     ) {
 
@@ -273,7 +272,9 @@ int main(
         if (package) {
             result += run("org.rascalmpl.shell.RascalPackage", n, rProjectRoot, p, sourceFiles, memory, rascalJar, extraArgs = ["-sourceLookup", "<rascalJar>", "-relocatedClasses", "<resolve(rProjectRoot, packageTarget)>"]);
         }
-        result += runTests(testModules, rascalJar, repoFolder, n, proj, p, pcfgs);
+        if (runTest) {
+            result += runTests(testModules, rascalJar, repoFolder, n, proj, p, pcfgs);
+        }
     }
     println("******\nDone running ");
     for (p <- toSet(stats.project)) {
