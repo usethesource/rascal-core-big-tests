@@ -259,7 +259,7 @@ int main(
         iprintln(p);
         loc projectRoot = repoFolder + n;
         rProjectRoot = resolveLocation(projectRoot);
-        rascalFiles = sort([*find(s, "rsc") | s <- p.srcs, (startsWith(s.path, projectRoot.path) || startsWith(s.path, rProjectRoot.path))]);
+        rascalFiles = sort([*{*find(s, "rsc") | s <- p.srcs, (startsWith(s.path, projectRoot.path) || startsWith(s.path, rProjectRoot.path))}]);
         sourceFiles = [f | f <- rascalFiles, !isIgnored(f, p.ignores)];
         if ([] == sourceFiles) {
             println("No source files. Skipping compilation and packaging.");
