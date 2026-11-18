@@ -21,6 +21,7 @@ data Project
         list[str] srcs = [], // override source calculation
         set[str] ignores = {}, // directories to ignore
         bool parallel = false,
+        bool parallelGraphBased = false,
         set[str] parallelPreCheck = {},
         set[str] testPrefixes={}
     );
@@ -32,8 +33,7 @@ Projects projects = {
         branch=trim(getSystemEnvironment()["RASCAL_BRANCH"] ? "main"),
         srcs = ["src/org/rascalmpl/library"],
         ignores={"experiments", "resource", "lang/rascal/tests", "lang/rascal/syntax/tests", "lang/rascal/grammar/tests"},
-        parallel = true,
-        parallelPreCheck = {"src/org/rascalmpl/library/Prelude.rsc"})>,
+        parallel = true, parallelGraphBased = true)>,
     <"rascal-all", project(|https://github.com/usethesource/rascal.git|, {"typepal-copy"}, // Dependency to ensure the right `typepal` sources are available
         branch=trim(getSystemEnvironment()["RASCAL_ALL_BRANCH"] ? "main"),
         ignores={"lang/rascal/tutor/examples", "NestedOr.rsc"},
@@ -41,7 +41,7 @@ Projects projects = {
         parallelPreCheck = {"src/org/rascalmpl/library/Prelude.rsc", "src/org/rascalmpl/compiler/lang/rascalcore/check/CheckerCommon.rsc"})>,
     <"typepal", project(|https://github.com/usethesource/typepal.git|, {"rascal-stdlib"},
         branch=trim(getSystemEnvironment()["TYPEPAL_BRANCH"] ? "main"),
-        ignores={"examples"})>,
+        ignores={"examples"}, parallel = true, parallelGraphBased = true)>,
     <"typepal-copy", project(|https://github.com/usethesource/typepal.git|, {},
         branch=trim(getSystemEnvironment()["TYPEPAL_COPY_BRANCH"] ? "main"),
         // This project is needed only to checkout `typepal` and copy the
@@ -54,10 +54,10 @@ Projects projects = {
     <"rascal-lucene", project(|https://github.com/usethesource/rascal-lucene.git|, {"rascal-stdlib"})>,
     <"python-air", project(|https://github.com/cwi-swat/python-air.git|, {"rascal-stdlib"})>,
     <"salix-contrib", project(|https://github.com/usethesource/salix-contrib.git|, {"rascal-stdlib", "salix-core"})>,
-    <"flybytes", project(|https://github.com/usethesource/flybytes.git|, {"rascal-stdlib"})>,
+    <"flybytes", project(|https://github.com/usethesource/flybytes.git|, {"rascal-stdlib"}, parallel = true, parallelGraphBased = true)>,
     <"drambiguity", project(|https://github.com/cwi-swat/drambiguity.git|, {"rascal-stdlib", "salix-core"})>,
     <"rascal-git", project(|https://github.com/cwi-swat/rascal-git.git|, {"rascal-stdlib"})>,
-    <"php-analysis", project(|https://github.com/cwi-swat/php-analysis.git|, {"rascal-stdlib", "rascal-git"}, srcs=["src/main/rascal"])>,
+    <"php-analysis", project(|https://github.com/cwi-swat/php-analysis.git|, {"rascal-stdlib", "rascal-git"}, srcs=["src/main/rascal"], parallel = true, parallelGraphBased = true)>,
     <"bird-core", project(|https://github.com/SWAT-engineering/bird.git|, {"rascal-stdlib", "typepal"}, subdir="bird-core")>,
     <"bird-ide", project(|https://github.com/SWAT-engineering/bird.git|, {"rascal-stdlib", "bird-core", "rascal-lsp", "typepal"}, subdir="bird-ide")>,
     <"rascal-lsp-all", project(|https://github.com/usethesource/rascal-language-servers.git|, {"rascal-all"}, branch=trim(getSystemEnvironment()["RASCAL_LSP_ALL_BRANCH"] ? "main"), subdir="rascal-lsp", srcs=["src/main/rascal/library","src/main/rascal/lsp"])>,
@@ -173,6 +173,9 @@ list[str] addParallelFlags(Project proj, list[loc] rascalFiles, int maxCores) {
     result = ["--parallel", "--parallelMax", "<maxCores>"];
     for (pc <- proj.parallelPreCheck, f <- rascalFiles, endsWith(f.path, pc)) {
         result += ["--parallelPreChecks", "<f>"];
+    }
+    if (proj.parallelGraphBased) {
+        result += "--parallelGraphBased";
     }
     return result;
 }
