@@ -61,6 +61,7 @@ jobs:
           repository: 'usethesource/rascal'
           ref: ${{ inputs.rascal_branch_build }}
           path: 'deps/rascal'
+          submodules: true
 
       - uses: actions/checkout@v7
         if: ${{ inputs.typepal_branch_build != '' }}
