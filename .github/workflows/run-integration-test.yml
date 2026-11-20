@@ -158,7 +158,7 @@ jobs:
         run: |
           java -Xmx500m -jar ${{ runner.temp }}/rascal.jar Main \
             --libs "${{ inputs.dependencies_on_lib_path }}" \
-            --maxCores 4 \
+            --maxCores 2 \
             --memory 12G \
             --rascalJar "|file:///${{ runner.temp }}/rascal.jar|" \
             --repoFolder "|cwd:///repos|" \
