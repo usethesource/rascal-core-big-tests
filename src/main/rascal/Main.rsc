@@ -41,7 +41,7 @@ Projects projects = {
         parallelPreCheck = {"src/org/rascalmpl/library/Prelude.rsc", "src/org/rascalmpl/compiler/lang/rascalcore/check/CheckerCommon.rsc"})>,
     <"typepal", project(|https://github.com/usethesource/typepal.git|, {"rascal-stdlib"},
         branch=trim(getSystemEnvironment()["TYPEPAL_BRANCH"] ? "main"),
-        ignores={"examples"}, parallel = true, parallelPreCheck={"src/analysis/typepal/TModel.rsc"})>,
+        ignores={"examples"})>,
     <"typepal-copy", project(|https://github.com/usethesource/typepal.git|, {},
         branch=trim(getSystemEnvironment()["TYPEPAL_COPY_BRANCH"] ? "main"),
         // This project is needed only to checkout `typepal` and copy the
@@ -54,14 +54,14 @@ Projects projects = {
     <"rascal-lucene", project(|https://github.com/usethesource/rascal-lucene.git|, {"rascal-stdlib"})>,
     <"python-air", project(|https://github.com/cwi-swat/python-air.git|, {"rascal-stdlib"})>,
     <"salix-contrib", project(|https://github.com/usethesource/salix-contrib.git|, {"rascal-stdlib", "salix-core"})>,
-    <"flybytes", project(|https://github.com/usethesource/flybytes.git|, {"rascal-stdlib"}, parallel = true, parallelPreCheck={"src/lang/flybytes/Syntax.rsc"} )>,
+    <"flybytes", project(|https://github.com/usethesource/flybytes.git|, {"rascal-stdlib"})>,
     <"drambiguity", project(|https://github.com/cwi-swat/drambiguity.git|, {"rascal-stdlib", "salix-core"})>,
     <"rascal-git", project(|https://github.com/cwi-swat/rascal-git.git|, {"rascal-stdlib"})>,
     <"php-analysis", project(|https://github.com/cwi-swat/php-analysis.git|, {"rascal-stdlib", "rascal-git"}, srcs=["src/main/rascal"], parallel = true, parallelGraphBased = true)>,
     <"bird-core", project(|https://github.com/SWAT-engineering/bird.git|, {"rascal-stdlib", "typepal"}, subdir="bird-core")>,
     <"bird-ide", project(|https://github.com/SWAT-engineering/bird.git|, {"rascal-stdlib", "bird-core", "rascal-lsp", "typepal"}, subdir="bird-ide")>,
-    <"rascal-lsp-all", project(|https://github.com/usethesource/rascal-language-servers.git|, {"rascal-all"}, branch=trim(getSystemEnvironment()["RASCAL_LSP_ALL_BRANCH"] ? "main"), subdir="rascal-lsp", srcs=["src/main/rascal/library","src/main/rascal/lsp"], parallel = true)>,
-    <"rascal-lsp", project(|https://github.com/usethesource/rascal-language-servers.git|, {"rascal-stdlib", "typepal"}, branch=trim(getSystemEnvironment()["RASCAL_LSP_BRANCH"] ? "main"), srcs=["src/main/rascal/library", "src/main/rascal/lsp"], ignores = {"lang/rascal/lsp/refactor", "lang/rascal/tests/rename", "lang/rascal/lsp/IDECheckerWrapper.rsc"}, subdir="rascal-lsp", testPrefixes={"lang::rascal::tests::rename"}, parallel = true)>
+    <"rascal-lsp-all", project(|https://github.com/usethesource/rascal-language-servers.git|, {"rascal-all"}, branch=trim(getSystemEnvironment()["RASCAL_LSP_ALL_BRANCH"] ? "main"), subdir="rascal-lsp", srcs=["src/main/rascal/library","src/main/rascal/lsp"])>,
+    <"rascal-lsp", project(|https://github.com/usethesource/rascal-language-servers.git|, {"rascal-stdlib", "typepal"}, branch=trim(getSystemEnvironment()["RASCAL_LSP_BRANCH"] ? "main"), srcs=["src/main/rascal/library", "src/main/rascal/lsp"], ignores = {"lang/rascal/lsp/refactor", "lang/rascal/tests/rename", "lang/rascal/lsp/IDECheckerWrapper.rsc"}, subdir="rascal-lsp", testPrefixes={"lang::rascal::tests::rename"})>
 };
 
 bool isWindows = /win/i := getSystemProperty("os.name");

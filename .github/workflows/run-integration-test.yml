@@ -47,7 +47,7 @@ env:
 
 jobs:
   test:
-    runs-on: ubicloud-standard-4
+    runs-on: ubicloud-standard-2
     strategy:
       matrix:
         target:
@@ -159,7 +159,7 @@ jobs:
           java -Xmx500m -jar ${{ runner.temp }}/rascal.jar Main \
             --libs "${{ inputs.dependencies_on_lib_path }}" \
             --maxCores 2 \
-            --memory 12G \
+            --memory 6G \
             --rascalJar "|file:///${{ runner.temp }}/rascal.jar|" \
             --repoFolder "|cwd:///repos|" \
             --full false \
